@@ -20,6 +20,7 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 - `src/main.js`: app startup, validation, scene setup, tour manager initialization.
 - `src/sceneMode.js`: lightweight/demo mode parsing for env variables and URL overrides.
 - `src/sceneSetup.js`: Cesium viewer creation, standard `cesium-navigation-es6` compass/navigation widget setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, default-globe fallback.
+- `src/photorealisticToggle.js`: upper-right presentation checkbox for enabling/disabling Google Photorealistic 3D Tiles at runtime.
 - `src/shipyardLocations.js`: structured KML-derived shop and yard placemarks.
 - `public/data/philly-tour.kml`: canonical browser-accessible KML source copy.
 - `src/tourStops.js`: narrated tour sequence and slide-specific graphics.
@@ -33,6 +34,7 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 - `src/logger.js`: level-based logging and authoring diagnostics.
 - `vite.config.js`: Vite base path and Cesium static asset configuration.
 - `.github/workflows/ci.yml`: GitHub Actions install, test, build, browser smoke, and dead-code checks.
+- `.github/workflows/pages.yml`: GitHub Actions build and deploy path for GitHub Pages.
 - `.gitignore`: generated output, local secrets, dependency folders, and local staging artifacts excluded from commits.
 - `.gitattributes`: line-ending and binary asset handling for Git.
 
@@ -59,7 +61,14 @@ npm run test:all
 
 ## Environment
 
-Use `.env.local` for local development secrets and `.env.production.local` for local production-build secrets. Do not commit real Cesium ion tokens.
+Use `.env.local` for local development secrets and `.env.production.local` for local production-build secrets. Do not add new committed secrets unless the user explicitly accepts that tradeoff.
+
+The current GitHub Pages path also uses a committed `.env.production` file so
+GitHub Actions can build the static site without a repository secret. Restrict
+the embedded Cesium ion token to localhost and the Pages deployment URL.
+If Google 3D loads only after changing Cesium ion **Allowed URLs** to **All
+URLs**, the token restrictions were blocking the app. For deployment, prefer
+explicit allowed URLs for localhost, `127.0.0.1`, and the GitHub Pages site.
 
 Important variables:
 

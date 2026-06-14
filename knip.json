@@ -5,5 +5,5 @@
     "tests/**/*.js"
   ],
   "project": ["src/**/*.js", "tests/**/*.js", "*.js"],
-  "ignoreDependencies": ["@testing-library/dom", "eslint", "prettier"]
+  "ignoreDependencies": ["eslint", "prettier"]
 }

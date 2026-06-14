@@ -1,5 +1,8 @@
 import * as Cesium from "cesium";
-import { resolveArrowControlOffset } from "./arrowControlOffset.js";
+import {
+  DEFAULT_ARROW_CONTROL_HEIGHT_M,
+  resolveArrowControlOffset,
+} from "./arrowControlOffset.js";
 import { FlowChevronLayer } from "./flowChevronLayer.js";
 import { logger } from "./logger.js";
 
@@ -53,12 +56,6 @@ export function buildCurvedArrowPolylineConfig(arrow, options = {}) {
   };
 }
 
-// calloutCoordinate returns the same lon/lat/height tuple used by the visible
-// point-label entity, which keeps arrow endpoints tied to adjusted shop points.
-function calloutCoordinate(callout) {
-  return [callout.lon, callout.lat, callout.height ?? 0];
-}
-
 // resolvePointLabelHeightReference keeps ordinary shop markers anchored to the
 // visible surface while still allowing rare authored callouts to request an
 // absolute altitude for cinematic or debugging use.
@@ -72,6 +69,93 @@ export function resolvePointLabelHeightReference(callout) {
   }
 
   return Cesium.HeightReference.CLAMP_TO_GROUND;
+}
+
+// sampleRenderedSurfaceHeight asks Cesium for the currently rendered terrain or
+// 3D Tiles height at the shop coordinate. Point labels use HeightReference
+// clamping inside Cesium's renderer; arrows need this explicit sample because
+// PolylineGraphics positions are fixed Cartesian coordinates.
+function sampleRenderedSurfaceHeight(scene, callout, options = {}) {
+  if (!scene) return undefined;
+
+  const cartographic = Cesium.Cartographic.fromDegrees(
+    callout.lon,
+    callout.lat,
+    callout.height ?? 0,
+  );
+  const sampleWidthM = options.sampleWidthM ?? 1;
+
+  if (
+    scene.sampleHeightSupported !== false &&
+    typeof scene.sampleHeight === "function"
+  ) {
+    try {
+      const sampledHeight = scene.sampleHeight(
+        cartographic,
+        undefined,
+        sampleWidthM,
+      );
+
+      if (Number.isFinite(sampledHeight)) return sampledHeight;
+    } catch (error) {
+      logger.debug("Scene height sample failed for arrow endpoint.", error);
+    }
+  }
+
+  if (
+    scene.clampToHeightSupported !== false &&
+    typeof scene.clampToHeight === "function"
+  ) {
+    try {
+      const clampedPosition = scene.clampToHeight(
+        Cesium.Cartesian3.fromRadians(
+          cartographic.longitude,
+          cartographic.latitude,
+          cartographic.height,
+        ),
+        undefined,
+        sampleWidthM,
+      );
+
+      if (clampedPosition) {
+        return Cesium.Cartographic.fromCartesian(clampedPosition).height;
+      }
+    } catch (error) {
+      logger.debug("Scene height clamp failed for arrow endpoint.", error);
+    }
+  }
+
+  return undefined;
+}
+
+// resolveSurfaceAnchoredCoordinate mirrors point-label height-reference rules
+// for arrow endpoints. Ordinary clamped shop labels use rendered surface
+// heights when available, relative-to-ground labels add their authored offset
+// above that surface, and absolute labels keep their explicit altitude.
+export function resolveSurfaceAnchoredCoordinate(
+  viewer,
+  callout,
+  options = {},
+) {
+  const heightReference = resolvePointLabelHeightReference(callout);
+  const authoredHeight = callout.height ?? 0;
+
+  if (heightReference === Cesium.HeightReference.NONE) {
+    return [callout.lon, callout.lat, authoredHeight];
+  }
+
+  const sampledHeight = sampleRenderedSurfaceHeight(
+    viewer?.scene,
+    callout,
+    options,
+  );
+  const surfaceHeight = sampledHeight ?? authoredHeight;
+  const height =
+    heightReference === Cesium.HeightReference.RELATIVE_TO_GROUND
+      ? surfaceHeight + authoredHeight
+      : surfaceHeight;
+
+  return [callout.lon, callout.lat, height];
 }
 
 // buildPointLabelStyle keeps active and inactive marker styling in one place so
@@ -148,6 +232,8 @@ export class CalloutManager {
     this.transientPointIds = new Set();
     this.transientArrowIds = new Set();
     this.activeEntities = [];
+    this.currentStop = undefined;
+    this.currentActiveArrowIds = new Set();
     const flowChevronOptions = options.flowChevronOptions ?? {};
     this.flowChevronLayer = new FlowChevronLayer(viewer, {
       ...flowChevronOptions,
@@ -266,13 +352,22 @@ export class CalloutManager {
       return undefined;
     }
 
-    const start = calloutCoordinate(startRecord.callout);
-    const end = calloutCoordinate(endRecord.callout);
+    const start = resolveSurfaceAnchoredCoordinate(
+      this.viewer,
+      startRecord.callout,
+      arrow.surfaceSampling,
+    );
+    const end = resolveSurfaceAnchoredCoordinate(
+      this.viewer,
+      endRecord.callout,
+      arrow.surfaceSampling,
+    );
     const controlOffset = resolveArrowControlOffset(start, end, arrow);
     const control = [
       (start[0] + end[0]) / 2 + (controlOffset.lonDeg ?? 0),
       (start[1] + end[1]) / 2 + (controlOffset.latDeg ?? 0),
-      controlOffset.heightM ?? 4,
+      (start[2] + end[2]) / 2 +
+        (controlOffset.heightM ?? DEFAULT_ARROW_CONTROL_HEIGHT_M),
     ];
 
     return {
@@ -339,6 +434,21 @@ export class CalloutManager {
     this.flowChevronLayer.setEnabled(enabled);
   }
 
+  // refreshSurfaceAnchoredArrows resamples endpoint heights for existing route
+  // arrows after the scene changes, such as when Google Photorealistic 3D Tiles
+  // load or refine. It updates arrows and chevrons without resetting the
+  // current slide, active labels, or camera state.
+  refreshSurfaceAnchoredArrows() {
+    if (!this.currentStop) return;
+
+    this.ensureBasePointLabels();
+    this.ensureBaseArrows(this.currentActiveArrowIds);
+
+    for (const arrow of this.currentStop.arrows ?? []) {
+      this.addCurvedArrow(arrow, this.currentActiveArrowIds.has(arrow.id));
+    }
+  }
+
   // showStopGraphics maps the tour data convention onto Cesium entity types:
   // persistent labels, highlighted zones, curved arrows, and fallback/debug
   // polylines.
@@ -349,6 +459,8 @@ export class CalloutManager {
     // can highlight the route into the active shop without changing label
     // visibility or emphasis rules.
     const activeArrowIds = new Set(stop.activeArrowIds ?? []);
+    this.currentStop = stop;
+    this.currentActiveArrowIds = activeArrowIds;
     this.ensureBaseArrows(activeArrowIds);
 
     const activeCallouts = stop.callouts ?? [];

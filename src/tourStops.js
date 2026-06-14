@@ -1,4 +1,7 @@
-import { DEFAULT_RELATIVE_CURVE_RATIO } from "./arrowControlOffset.js";
+import {
+  DEFAULT_ARROW_CONTROL_HEIGHT_M,
+  DEFAULT_RELATIVE_CURVE_RATIO,
+} from "./arrowControlOffset.js";
 import {
   getLocationBySlug,
   shipyardLocations,
@@ -33,9 +36,10 @@ const ACTIVE_FLOW_ARROW_COLOR = "#35f27a";
 // hiding the always-visible blue process-flow context.
 const ACTIVE_FLOW_ARROW_WIDTH = 8;
 
-// Low control height keeps the directional route close to the satellite imagery
-// instead of creating tall 3D arcs that distract from the yard layout.
-const FLOW_ARROW_CONTROL_HEIGHT_M = 4;
+// FLOW_ARROW_CONTROL_HEIGHT_M gives the directional route a visible vertical
+// bow above the sampled endpoint heights while keeping the endpoints attached
+// to their shop nodes in lightweight and Google 3D modes.
+const FLOW_ARROW_CONTROL_HEIGHT_M = DEFAULT_ARROW_CONTROL_HEIGHT_M;
 
 // REDUCED_FLOW_ARROW_CURVE_RATIO trims congested shop-to-section routes while
 // preserving the original bend direction. This is used where full bow offsets

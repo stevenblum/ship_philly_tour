@@ -34,6 +34,15 @@ VITE_ENABLE_AUTHORING=false
 VITE_LOG_LEVEL=warn
 ```
 
+For the current GitHub Pages setup, the same production values are also committed
+in `.env.production` so the deploy workflow can build without a GitHub Actions
+secret. This embeds the Cesium ion token in the browser bundle; restrict that
+token in Cesium ion to `localhost` and the GitHub Pages deployment URL.
+Cesium ion's **Allowed URLs** setting must include every local/deployed origin
+that will load Google Photorealistic 3D Tiles; using **All URLs** works for
+quick troubleshooting but is less restrictive than the recommended deployment
+setting.
+
 ## Commands
 
 ```bash
@@ -51,7 +60,27 @@ npm run test:all
 
 `build:github` sets `VITE_APP_BASE_PATH=/ship_philly_tour/` so Vite assets and Cesium static files resolve correctly on a GitHub Pages project site.
 
-The Cesium ion token is read by Vite at build time from ignored local env files. For GitHub Actions-based Pages deployment, configure `VITE_CESIUM_ION_TOKEN` as a repository secret or build environment variable before running `npm run build:github`.
+The Cesium ion token is read by Vite at build time. Local builds can use ignored
+local env files, while the GitHub Pages workflow currently reads the committed
+`.env.production` file.
+
+## GitHub Pages
+
+This repository includes `.github/workflows/pages.yml`, which builds `dist/`
+with `npm run build:github` and deploys it through GitHub Actions.
+
+To enable it on GitHub:
+
+1. Open the repository settings.
+2. Go to **Pages**.
+3. Set **Source** to **GitHub Actions**.
+4. Push `main` or run the **Deploy GitHub Pages** workflow manually.
+
+The expected project-site URL is:
+
+```text
+https://stevenblum.github.io/ship_philly_tour/
+```
 
 ## Scene Modes
 
@@ -72,7 +101,7 @@ http://localhost:5173/?photorealistic=true
 
 Avoid repeated page refreshes in photorealistic mode. Keep the viewer session open during live demos when possible, and restrict the Cesium ion token to `localhost` plus the GitHub Pages deployment URL.
 
-Scene mode is logged for developer confirmation, but the default presentation UI does not show internal Vite/Cesium status badges to the audience.
+Scene mode is logged for developer confirmation, but the default presentation UI does not show internal Vite/Cesium status badges to the audience. The upper-right **Google 3D** checkbox can enable or disable Google Photorealistic 3D Tiles at runtime; leave it unchecked for normal development and rehearsals to conserve tile usage.
 
 ## Navigation Widget
 
@@ -84,7 +113,7 @@ The original KML source is preserved as `Phillly Tour.kml` and normalized for ap
 
 Tour stops should use `cameraMode: "targetCentered"` by default. In that mode, `target.lonDeg`, `target.latDeg`, and `target.heightM` define what stays centered, while `view.headingDeg`, `view.pitchDeg`, and `view.rangeM` define the camera offset around that target. Use `cameraMode: "absolutePose"` only for special shots where the exact camera location matters.
 
-Shop point-label callouts are authored at `height: 0` and clamped to the rendered surface. In lightweight mode they sit on the globe/terrain surface; in photorealistic demo mode Cesium clamps them to the Google Photorealistic 3D Tiles surface when the tileset is loaded with collision enabled.
+Shop point-label callouts are authored at `height: 0` when possible and clamped to the rendered surface. In lightweight mode they sit on the globe/terrain surface; in photorealistic demo mode Cesium clamps them to the Google Photorealistic 3D Tiles surface when the tileset is loaded with collision enabled. Production-flow arrow endpoints resample the rendered surface at their start and end shop labels so the arrows can meet roof-height or ground-height nodes after the Google tiles refine.
 
 The KML-derived shop and yard point labels stay visible throughout the tour for layout context, along with a curated Cutting Area point placed 40 yards north of the Web Shop. Only the current stop's active label set switches to a green, larger, bold style; visible context labels from previous or next production areas stay in the standard cyan/white style. For the Panel Production Shops stop, the five panel-production shop labels are active together.
 
@@ -116,10 +145,18 @@ npm run test:all
 
 ## Repository Hygiene
 
-Commit source, public assets, tests, requirements, `package-lock.json`, `.env.example`, `.gitattributes`, `.gitignore`, and `.github/workflows/ci.yml`. Do not commit local env files, `node_modules/`, `dist/`, Playwright reports, test output, `.venv/`, or `initial_photos/`; the app uses the normalized image copies in `public/photos/`.
+Commit source, public assets, tests, requirements, `package-lock.json`, `.env.example`, `.env.production`, `.gitattributes`, `.gitignore`, `.github/workflows/ci.yml`, and `.github/workflows/pages.yml`. Do not commit local env files, `node_modules/`, `dist/`, Playwright reports, test output, `.venv/`, or `initial_photos/`; the app uses the normalized image copies in `public/photos/`.
 
 ## Troubleshooting
 
-If photorealistic tiles do not load after opening `?mode=demo`, verify the Cesium ion token has Google Photorealistic 3D Tiles permissions and is allowed for the current URL. The app should log a warning and fall back to the lightweight Cesium scene.
+If photorealistic tiles do not load after opening `?mode=demo`, or if the **Google 3D** checkbox immediately rolls back to unchecked, verify the Cesium ion token has Google Photorealistic 3D Tiles permissions for asset `2275207` and is allowed for the current URL. The app reports `access-forbidden` for Cesium ion `401/403` responses and falls back to the lightweight Cesium scene.
+
+For local development and GitHub Pages, include these allowed URL patterns in the Cesium ion token restrictions:
+
+```text
+http://localhost:5173/*
+http://127.0.0.1:5173/*
+https://stevenblum.github.io/ship_philly_tour/*
+```
 
 If Cesium workers or widgets fail to load, verify `dist/cesiumStatic` exists after build and that `VITE_APP_BASE_PATH` matches the deployment path.

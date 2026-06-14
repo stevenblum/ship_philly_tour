@@ -12,6 +12,12 @@ const RADIANS_TO_DEGREES = 180 / Math.PI;
 // curves at the compact scale of the shipyard.
 export const DEFAULT_RELATIVE_CURVE_RATIO = 0.16;
 
+// DEFAULT_ARROW_CONTROL_HEIGHT_M defines the vertical lift above the average
+// endpoint height for route midpoint controls. Keeping this separate from the
+// lateral curve ratio lets presentation tuning raise the arcs without changing
+// route decluttering offsets.
+export const DEFAULT_ARROW_CONTROL_HEIGHT_M = 8;
+
 // coordinateParts accepts both callout objects and [lon, lat, height] tuples so
 // the same offset math can run against authored data and runtime point records.
 function coordinateParts(coordinate) {
@@ -37,7 +43,11 @@ function localTangentVectorMeters(startCoordinate, endCoordinate) {
   const averageLatRadians = ((start.lat + end.lat) / 2) * DEGREES_TO_RADIANS;
 
   return {
-    eastM: (end.lon - start.lon) * DEGREES_TO_RADIANS * WGS84_MEAN_RADIUS_M * Math.cos(averageLatRadians),
+    eastM:
+      (end.lon - start.lon) *
+      DEGREES_TO_RADIANS *
+      WGS84_MEAN_RADIUS_M *
+      Math.cos(averageLatRadians),
     northM: (end.lat - start.lat) * DEGREES_TO_RADIANS * WGS84_MEAN_RADIUS_M,
     averageLatRadians,
   };
@@ -45,7 +55,10 @@ function localTangentVectorMeters(startCoordinate, endCoordinate) {
 
 // approximateSurfaceDistanceMeters returns the local surface distance between
 // two shop points for proportional route-control calculations and tests.
-export function approximateSurfaceDistanceMeters(startCoordinate, endCoordinate) {
+export function approximateSurfaceDistanceMeters(
+  startCoordinate,
+  endCoordinate,
+) {
   const vector = localTangentVectorMeters(startCoordinate, endCoordinate);
 
   return Math.hypot(vector.eastM, vector.northM);
@@ -55,7 +68,9 @@ export function approximateSurfaceDistanceMeters(startCoordinate, endCoordinate)
 // degree offsets that CalloutManager can add to the arrow midpoint.
 function metersToDegreeOffset(eastM, northM, averageLatRadians) {
   return {
-    lonDeg: (eastM / (WGS84_MEAN_RADIUS_M * Math.cos(averageLatRadians))) * RADIANS_TO_DEGREES,
+    lonDeg:
+      (eastM / (WGS84_MEAN_RADIUS_M * Math.cos(averageLatRadians))) *
+      RADIANS_TO_DEGREES,
     latDeg: (northM / WGS84_MEAN_RADIUS_M) * RADIANS_TO_DEGREES,
   };
 }
@@ -64,11 +79,17 @@ function metersToDegreeOffset(eastM, northM, averageLatRadians) {
 // magnitude is proportional to route length. `side` is relative to travel from
 // arrow tail/start to arrow head/end: "left" bows left of travel, "right" bows
 // right of travel.
-export function buildRelativeControlOffset(startCoordinate, endCoordinate, options = {}) {
+export function buildRelativeControlOffset(
+  startCoordinate,
+  endCoordinate,
+  options = {},
+) {
   const side = options.side ?? "left";
 
   if (!["left", "right"].includes(side)) {
-    throw new Error(`Arrow control side must be "left" or "right"; received "${side}".`);
+    throw new Error(
+      `Arrow control side must be "left" or "right"; received "${side}".`,
+    );
   }
 
   const vector = localTangentVectorMeters(startCoordinate, endCoordinate);
@@ -78,7 +99,7 @@ export function buildRelativeControlOffset(startCoordinate, endCoordinate, optio
     return {
       lonDeg: 0,
       latDeg: 0,
-      heightM: options.heightM ?? 4,
+      heightM: options.heightM ?? DEFAULT_ARROW_CONTROL_HEIGHT_M,
       distanceM,
       offsetM: 0,
       side,
@@ -98,7 +119,7 @@ export function buildRelativeControlOffset(startCoordinate, endCoordinate, optio
 
   return {
     ...degreeOffset,
-    heightM: options.heightM ?? 4,
+    heightM: options.heightM ?? DEFAULT_ARROW_CONTROL_HEIGHT_M,
     distanceM,
     offsetM,
     side,
@@ -107,10 +128,24 @@ export function buildRelativeControlOffset(startCoordinate, endCoordinate, optio
 
 // resolveArrowControlOffset preserves explicit manual offsets for rare custom
 // arrows while letting production-flow arrows use proportional relative curves.
-export function resolveArrowControlOffset(startCoordinate, endCoordinate, arrow) {
+export function resolveArrowControlOffset(
+  startCoordinate,
+  endCoordinate,
+  arrow,
+) {
   if (arrow.controlCurve) {
-    return buildRelativeControlOffset(startCoordinate, endCoordinate, arrow.controlCurve);
+    return buildRelativeControlOffset(
+      startCoordinate,
+      endCoordinate,
+      arrow.controlCurve,
+    );
   }
 
-  return arrow.controlOffset ?? { lonDeg: 0, latDeg: 0, heightM: 4 };
+  return (
+    arrow.controlOffset ?? {
+      lonDeg: 0,
+      latDeg: 0,
+      heightM: DEFAULT_ARROW_CONTROL_HEIGHT_M,
+    }
+  );
 }

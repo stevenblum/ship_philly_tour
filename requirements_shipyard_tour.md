@@ -139,10 +139,10 @@ The app should expose these commands through `package.json`:
 
 ```json
 {
-    "scripts": {
-      "dev": "vite",
-      "dev:demo": "VITE_SCENE_MODE=demo VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true vite",
-      "build": "vite build",
+  "scripts": {
+    "dev": "vite",
+    "dev:demo": "VITE_SCENE_MODE=demo VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true vite",
+    "build": "vite build",
     "build:github": "VITE_APP_BASE_PATH=/ship_philly_tour/ vite build",
     "preview": "vite preview",
     "test": "npm run test:unit",
@@ -546,21 +546,21 @@ The KML source includes placemarks for the largest shops and major yard areas. T
 
 Initial KML placemarks:
 
-| Placemark | Longitude | Latitude | Height |
-| --- | ---: | ---: | ---: |
-| Steel Storage Area | -75.19154635188589 | 39.8905216581939 | 4.125336980968635 |
-| Large Panel Line | -75.19075713256817 | 39.8900063674073 | 18.018204053712 |
-| Double Bottom Line | -75.19077244420436 | 39.88969508567276 | 21.20031016049998 |
-| Web Shop | -75.18994035699241 | 39.89031406521822 | 21.80799734858699 |
-| Bulkhead Shop | -75.18958279608138 | 39.89043566182851 | 22.26920616734652 |
-| Outfitting Shop | -75.18926880736132 | 39.8898125382508 | 22.21015129931645 |
-| Curved Panel Shop | -75.18882476074256 | 39.890663300178794 | 28.81652363403335 |
-| Section Asembly Shop | -75.18845859064652 | 39.89044519171701 | 26.097376478271 |
-| Grand Block Shop | -75.18882979024634 | 39.88872808015807 | 9.567321138301356 |
-| Paint Shop | -75.18871980613957 | 39.88731435526774 | 33.4607997919598 |
-| Grand Block Assembly Area | -75.19015505259583 | 39.8885150815882 | 3.657371597748869 |
-| Building Dock | -75.19072072770476 | 39.88720122928942 | 2.203360184659442 |
-| Outfitting Dock | -75.19217773074095 | 39.88656858703229 | 1.034634275135133 |
+| Placemark                 |          Longitude |           Latitude |            Height |
+| ------------------------- | -----------------: | -----------------: | ----------------: |
+| Steel Storage Area        | -75.19154635188589 |   39.8905216581939 | 4.125336980968635 |
+| Large Panel Line          | -75.19075713256817 |   39.8900063674073 |   18.018204053712 |
+| Double Bottom Line        | -75.19077244420436 |  39.88969508567276 | 21.20031016049998 |
+| Web Shop                  | -75.18994035699241 |  39.89031406521822 | 21.80799734858699 |
+| Bulkhead Shop             | -75.18958279608138 |  39.89043566182851 | 22.26920616734652 |
+| Outfitting Shop           | -75.18926880736132 |   39.8898125382508 | 22.21015129931645 |
+| Curved Panel Shop         | -75.18882476074256 | 39.890663300178794 | 28.81652363403335 |
+| Section Asembly Shop      | -75.18845859064652 |  39.89044519171701 |   26.097376478271 |
+| Grand Block Shop          | -75.18882979024634 |  39.88872808015807 | 9.567321138301356 |
+| Paint Shop                | -75.18871980613957 |  39.88731435526774 |  33.4607997919598 |
+| Grand Block Assembly Area | -75.19015505259583 |   39.8885150815882 | 3.657371597748869 |
+| Building Dock             | -75.19072072770476 |  39.88720122928942 | 2.203360184659442 |
+| Outfitting Dock           | -75.19217773074095 |  39.88656858703229 | 1.034634275135133 |
 
 KML import requirements:
 
@@ -608,15 +608,18 @@ export function flyToTargetCentered(viewer, stop) {
   const target = Cesium.Cartesian3.fromDegrees(
     stop.target.lonDeg,
     stop.target.latDeg,
-    stop.target.heightM ?? 0
+    stop.target.heightM ?? 0,
   );
 
-  const boundingSphere = new Cesium.BoundingSphere(target, stop.target.radiusM ?? 25);
+  const boundingSphere = new Cesium.BoundingSphere(
+    target,
+    stop.target.radiusM ?? 25,
+  );
 
   const offset = new Cesium.HeadingPitchRange(
     Cesium.Math.toRadians(stop.view.headingDeg),
     Cesium.Math.toRadians(stop.view.pitchDeg),
-    stop.view.rangeM
+    stop.view.rangeM,
   );
 
   return new Promise((resolve, reject) => {
@@ -943,10 +946,15 @@ export class TourManager {
   }
 
   updateProgressDots() {
-    const dots = Array.from(this.progressDots.querySelectorAll(".progress-dot"));
+    const dots = Array.from(
+      this.progressDots.querySelectorAll(".progress-dot"),
+    );
     dots.forEach((dot, index) => {
       dot.classList.toggle("active", index === this.currentIndex);
-      dot.setAttribute("aria-current", index === this.currentIndex ? "step" : "false");
+      dot.setAttribute(
+        "aria-current",
+        index === this.currentIndex ? "step" : "false",
+      );
     });
   }
 
@@ -956,7 +964,10 @@ export class TourManager {
   }
 
   next() {
-    const nextIndex = Math.min(this.currentIndex + 1, this.tourStops.length - 1);
+    const nextIndex = Math.min(
+      this.currentIndex + 1,
+      this.tourStops.length - 1,
+    );
     this.goToStop(nextIndex);
   }
 
@@ -1040,6 +1051,8 @@ The production-flow arrows should remain visible across all slides as a persiste
 Create `src/flowChevronLayer.js` as a standalone directional-flow overlay. It should render repeated small chevrons as Cesium billboard entities on the exact sampled positions generated for each curved arrow, so existing arrow layout and offset controls remain authoritative. The chevron layer should be enabled by default, support `VITE_ENABLE_FLOW_CHEVRONS=false` and a URL override such as `?chevrons=false`, use quieter blue chevrons for inactive process context, and use larger green chevrons with a subtle wave/glow effect for the currently active route arrows. Chevron count should be calculated from sampled Cesium `Cartesian3` path length in meters, using approximately 6 yards between chevrons instead of a fixed number of chevrons per arrow. Chevron rotation should be calculated from a local screen-space tangent on the sampled path and converted into Cesium billboard rotation, accounting for Cesium window coordinates using y-down screen space while billboard rotation uses a y-up plane. Turning the layer off must leave the persistent blue/green `PolylineArrowMaterialProperty` arrows visible.
 
 Point-label callouts should use `Cesium.HeightReference.CLAMP_TO_GROUND` for both `point` and `label` graphics by default. In lightweight mode this anchors the point to the globe/terrain surface. In photorealistic mode it can clamp to Google Photorealistic 3D Tiles when the active tileset has collision enabled. Use absolute-height labels only when a stop explicitly needs an elevated marker.
+
+Production-flow arrows that reference point-label ids must resolve their start and end heights from the same rendered surface used by the shop labels when Cesium scene height sampling is available. This keeps arrows attached to shop nodes when Google Photorealistic 3D Tiles place labels on roofs or other elevated surfaces. The arrow midpoint/control height should be calculated relative to the average sampled endpoint height, not as a fixed absolute altitude. The current presentation default should use roughly `8m` of midpoint vertical lift unless an individual route explicitly overrides it.
 
 KML-derived shop and yard point labels plus the curated Cutting Area point should remain visible across all stops as a persistent layout layer. The Cutting Shop stop should use and activate the Cutting Area point. Only the current stop's active point-label set should be emphasized by making the point green, increasing the point size, and using bold label text. Labels that are visible only for previous/next context should remain in the standard inactive style. For the Panel Production Shops stop, the five panel-production shop labels should be active together. Persistent production-flow arrows should remain visible across all stops. Stop-specific polygons and fallback/debug polylines remain transient and should clear between stops.
 
@@ -1127,12 +1140,14 @@ export class CalloutManager {
 
   addCurvedArrow(arrow) {
     if ((arrow.coordinates?.length ?? 0) < 3) {
-      console.warn(`Curved arrow ${arrow.id} needs at least three control points.`);
+      console.warn(
+        `Curved arrow ${arrow.id} needs at least three control points.`,
+      );
       return;
     }
 
     const controlPoints = arrow.coordinates.map(([lon, lat, height = 0]) =>
-      Cesium.Cartesian3.fromDegrees(lon, lat, height)
+      Cesium.Cartesian3.fromDegrees(lon, lat, height),
     );
 
     const spline = new Cesium.CatmullRomSpline({
@@ -1191,6 +1206,7 @@ Requirements:
 - Must create Google Photorealistic 3D Tiles with collision enabled so surface-clamped point labels rest on the rendered 3D Tiles surface at their latitude and longitude.
 - Must keep required Cesium and Google credits/attribution visible.
 - Must fall back to lightweight mode if the token is missing, token permissions are insufficient, the network fails, or tile loading fails.
+- Must classify Cesium ion `401` or `403` responses during Google Photorealistic 3D Tiles loading as `access-forbidden` so token permission and URL restriction problems are distinguishable from generic tile-load failures.
 - Must preserve tour controls and overlays when fallback occurs.
 
 ### 13.3 Configuration and overrides
@@ -1223,7 +1239,8 @@ Example implementation intent:
 ```js
 const params = new URLSearchParams(window.location.search);
 
-const sceneMode = params.get("mode") ?? import.meta.env.VITE_SCENE_MODE ?? "lightweight";
+const sceneMode =
+  params.get("mode") ?? import.meta.env.VITE_SCENE_MODE ?? "lightweight";
 
 const usePhotorealistic =
   sceneMode === "demo" ||
@@ -1234,7 +1251,7 @@ const usePhotorealistic =
 if (usePhotorealistic) {
   const tileset = await Cesium.createGooglePhotorealistic3DTileset(
     { onlyUsingWithGoogleGeocoder: true },
-    { enableCollision: true }
+    { enableCollision: true },
   );
   viewer.scene.primitives.add(tileset);
 } else {
@@ -1255,7 +1272,23 @@ Scene mode: lightweight | Google Photorealistic 3D Tiles: disabled
 
 The default presentation UI should not show internal Vite, Cesium, build, scene-mode, or slide-count status to the audience. If a future debug overlay is added, it should be gated behind authoring/debug configuration and disabled for presentation.
 
-### 13.5 Intended workflow
+### 13.5 Runtime presentation toggle
+
+The app must include a small upper-right checkbox labeled for Google 3D or equivalent wording. It should sit above the standard `cesium-navigation-es6` compass and zoom controls without customizing the plugin controls.
+
+Requirements:
+
+- The checkbox must start unchecked in default lightweight mode.
+- The checkbox must start checked if the app is intentionally opened in photorealistic/demo mode and the tiles load successfully.
+- Checking the box must enable Google Photorealistic 3D Tiles without a code edit.
+- Unchecking the box must remove or disable Google Photorealistic 3D Tiles and restore the lightweight scene context.
+- The control must not replace URL/environment scene-mode configuration; it is a runtime override for presenters and developers.
+- If enabling tiles fails because of a missing token, permission problem, network failure, or tile-load failure, the checkbox must return to unchecked and leave the tour usable in lightweight mode.
+- If enabling tiles fails because Cesium ion returns `access-forbidden`, the checkbox title or accessible label must explain that the token needs Google Photorealistic 3D Tiles asset permission and allowed URL access.
+- The control may be hidden with the existing presentation-chrome hide shortcut if the presenter wants an unobstructed screenshot or video frame.
+- The checkbox is allowed in the presentation UI because it is an operator control for quota management, not an internal Vite/Cesium status badge.
+
+### 13.6 Intended workflow
 
 Use lightweight mode for normal development, automated tests, content edits, and most rehearsals.
 
@@ -1403,6 +1436,7 @@ The first working version should include:
 34. Unit, browser smoke, and build/deployment test commands wired into `package.json`.
 35. Knip dead-code detection configured through `knip.json` and wired to `npm run deadcode`.
 36. Standard Cesium compass/navigation widget initialized through `cesium-navigation-es6` with the plugin defaults for compass, zoom controls, distance legend, and compass outer ring.
+37. Upper-right runtime checkbox that enables/disables Google Photorealistic 3D Tiles without changing code.
 
 ## 18. Acceptance Criteria
 
@@ -1417,6 +1451,9 @@ The implementation is acceptable when:
 - Lightweight mode shows standard aerial/satellite imagery or equivalent low-cost geographic context.
 - Google Photorealistic 3D Tiles are not loaded unless explicitly enabled.
 - `?mode=demo`, `?mode=photorealistic`, `?photorealistic=true`, or equivalent environment configuration enables high-detail mode.
+- The upper-right Google 3D checkbox is visible above the compass/zoom tools, starts unchecked in lightweight mode, and can enable high-detail mode at runtime.
+- Unchecking the Google 3D checkbox returns the app to lightweight scene context without breaking the active tour state.
+- If runtime photorealistic enabling fails, the Google 3D checkbox rolls back to unchecked and the app remains usable.
 - The active scene mode is logged without showing internal scene/build status in the presentation UI by default.
 - Successful photorealistic tile loading uses Google Photorealistic 3D Tiles as the high-detail demo scene context.
 - Photorealistic tile failure falls back to the lightweight Cesium scene, logs a warning through `src/logger.js`, and leaves tour controls usable.
@@ -1427,6 +1464,7 @@ The implementation is acceptable when:
 - Visible previous/next context point labels remain in the standard inactive style.
 - Low blue production-flow arrows remain visible when navigating between stops.
 - Production-flow arrow endpoints resolve from shop point-label records instead of duplicated coordinates.
+- Production-flow arrow endpoint heights resample the rendered terrain or 3D Tiles surface so arrows visually meet clamped shop point labels in lightweight and photorealistic modes.
 - Production-flow arrow curve offsets scale proportionally with the current distance between endpoint point-label records.
 - Congested production-flow arrows can use reduced proportional curve ratios without changing their authored left/right bend side.
 - Production-flow arrow curve direction is authored with a left/right side argument relative to the arrow route direction.
@@ -1682,7 +1720,7 @@ Check:
 Use:
 
 ```js
-disableDepthTestDistance: Number.POSITIVE_INFINITY
+disableDepthTestDistance: Number.POSITIVE_INFINITY;
 ```
 
 for point and label graphics where appropriate.

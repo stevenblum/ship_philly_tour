@@ -2,6 +2,8 @@ import { flyToStopCamera, setViewForStop } from "./cameraUtils.js";
 import { CalloutManager } from "./calloutManager.js";
 import { logger } from "./logger.js";
 
+const SURFACE_REFRESH_DELAYS_MS = [0, 250, 750, 1500, 3000, 5000];
+
 // TourManager coordinates slide state, DOM overlays, keyboard controls, and
 // Cesium camera movement to make the app behave like a live 3D presentation.
 export class TourManager {
@@ -27,8 +29,10 @@ export class TourManager {
     this.statsPanel = document.getElementById("statsPanel");
     this.progressDots = document.getElementById("progressDots");
     this.sceneStatus = document.getElementById("sceneStatus");
+    this.photorealisticToggle = document.getElementById("photorealisticToggle");
     this.nextBtn = document.getElementById("nextBtn");
     this.prevBtn = document.getElementById("prevBtn");
+    this.surfaceRefreshTimers = [];
   }
 
   // initialize creates controls before rendering stop 0 so a page load always
@@ -145,6 +149,10 @@ export class TourManager {
     this.updateControls();
     this.calloutManager.showStopGraphics(stop);
     this.flyCamera(stop, options);
+
+    if (this.viewer.shipyardPhotorealisticTileset) {
+      this.refreshSurfaceAnchoredGraphics({ repeat: true });
+    }
   }
 
   // updateOverlay renders text, photos, and stats using textContent/DOM nodes so
@@ -234,6 +242,34 @@ export class TourManager {
     });
   }
 
+  // clearSurfaceRefreshTimers prevents outdated delayed samples from one scene
+  // state or stop from mutating arrows after the presenter has moved on.
+  clearSurfaceRefreshTimers() {
+    for (const timerId of this.surfaceRefreshTimers) {
+      clearTimeout(timerId);
+    }
+
+    this.surfaceRefreshTimers = [];
+  }
+
+  // refreshSurfaceAnchoredGraphics resamples arrow endpoint heights from the
+  // current rendered scene. Repeating the sample is important for Google
+  // Photorealistic 3D Tiles because Cesium streams/refines tile geometry after
+  // the checkbox succeeds and after camera flights move to new shops.
+  refreshSurfaceAnchoredGraphics(options = {}) {
+    this.clearSurfaceRefreshTimers();
+    this.calloutManager.refreshSurfaceAnchoredArrows?.();
+
+    if (!options.repeat) return;
+
+    for (const delayMs of options.delaysMs ?? SURFACE_REFRESH_DELAYS_MS) {
+      const timerId = setTimeout(() => {
+        this.calloutManager.refreshSurfaceAnchoredArrows?.();
+      }, delayMs);
+      this.surfaceRefreshTimers.push(timerId);
+    }
+  }
+
   // toggleFullscreen uses the browser Fullscreen API required for presentation
   // use and ignores unsupported contexts gracefully.
   async toggleFullscreen() {
@@ -254,5 +290,9 @@ export class TourManager {
     this.tourPanel.classList.toggle("is-hidden", this.isChromeHidden);
     this.progressDots.classList.toggle("is-hidden", this.isChromeHidden);
     this.sceneStatus?.classList.toggle("is-hidden", this.isChromeHidden);
+    this.photorealisticToggle?.classList.toggle(
+      "is-hidden",
+      this.isChromeHidden,
+    );
   }
 }

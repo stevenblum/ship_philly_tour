@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   approximateSurfaceDistanceMeters,
   buildRelativeControlOffset,
+  DEFAULT_ARROW_CONTROL_HEIGHT_M,
   DEFAULT_RELATIVE_CURVE_RATIO,
 } from "../../src/arrowControlOffset.js";
 import {
@@ -205,7 +206,7 @@ describe("tour data validation", () => {
     ).toBe(true);
     expect(
       Math.max(...processFlowArrows.map((arrow) => arrow.controlCurve.heightM)),
-    ).toBeLessThanOrEqual(4);
+    ).toBeLessThanOrEqual(DEFAULT_ARROW_CONTROL_HEIGHT_M);
     expect(arrowIds).toContain("flow-steel-storage-to-cutting-area");
     expect(arrowIds).toContain("flow-cutting-area-to-web-shop");
     expect(arrowIds).toContain("flow-cutting-area-to-large-panel");

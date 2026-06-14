@@ -4,6 +4,7 @@ import {
   buildPointLabelEntityConfig,
   CalloutManager,
   resolvePointLabelHeightReference,
+  resolveSurfaceAnchoredCoordinate,
 } from "../../src/calloutManager.js";
 
 // These tests protect the surface-anchored label behavior without starting a
@@ -21,9 +22,10 @@ describe("point-label callout graphics", () => {
   // createFakeViewer captures the entity configs CalloutManager would send to
   // Cesium so persistent point and arrow lifecycle behavior can be tested
   // without a WebGL scene.
-  function createFakeViewer() {
+  function createFakeViewer(options = {}) {
     const addedEntities = [];
     const viewer = {
+      scene: options.scene,
       entities: {
         add: vi.fn((config) => {
           const entity = {
@@ -52,8 +54,12 @@ describe("point-label callout graphics", () => {
   test("clamps ordinary shop point labels to the active surface", () => {
     const config = buildPointLabelEntityConfig(callout);
 
-    expect(config.point.heightReference).toBe(Cesium.HeightReference.CLAMP_TO_GROUND);
-    expect(config.label.heightReference).toBe(Cesium.HeightReference.CLAMP_TO_GROUND);
+    expect(config.point.heightReference).toBe(
+      Cesium.HeightReference.CLAMP_TO_GROUND,
+    );
+    expect(config.label.heightReference).toBe(
+      Cesium.HeightReference.CLAMP_TO_GROUND,
+    );
   });
 
   test("allows explicit absolute-height callouts for rare authored exceptions", () => {
@@ -66,6 +72,19 @@ describe("point-label callout graphics", () => {
     expect(heightReference).toBe(Cesium.HeightReference.NONE);
   });
 
+  test("resolves clamped arrow endpoints from rendered scene height samples", () => {
+    const viewer = {
+      scene: {
+        sampleHeightSupported: true,
+        sampleHeight: vi.fn(() => 37),
+      },
+    };
+
+    const coordinate = resolveSurfaceAnchoredCoordinate(viewer, callout);
+
+    expect(coordinate).toEqual([callout.lon, callout.lat, 37]);
+  });
+
   test("keeps base shop point labels visible while emphasizing only active labels", () => {
     const { addedEntities, viewer } = createFakeViewer();
     const panelCallout = {
@@ -75,7 +94,9 @@ describe("point-label callout graphics", () => {
       lon: -75.19075713256817,
       lat: 39.8900063674073,
     };
-    const manager = new CalloutManager(viewer, { baseCallouts: [callout, panelCallout] });
+    const manager = new CalloutManager(viewer, {
+      baseCallouts: [callout, panelCallout],
+    });
 
     manager.showStopGraphics({
       callouts: [callout, panelCallout],
@@ -86,7 +107,9 @@ describe("point-label callout graphics", () => {
     });
 
     const webEntity = addedEntities.find((entity) => entity.id === callout.id);
-    const panelEntity = addedEntities.find((entity) => entity.id === panelCallout.id);
+    const panelEntity = addedEntities.find(
+      (entity) => entity.id === panelCallout.id,
+    );
 
     expect(addedEntities).toHaveLength(2);
     expect(webEntity.point.pixelSize).toBe(10);
@@ -119,7 +142,9 @@ describe("point-label callout graphics", () => {
       lon: -75.19075713256817,
       lat: 39.8900063674073,
     };
-    const manager = new CalloutManager(viewer, { baseCallouts: [callout, panelCallout] });
+    const manager = new CalloutManager(viewer, {
+      baseCallouts: [callout, panelCallout],
+    });
 
     manager.showStopGraphics({
       callouts: [callout, panelCallout],
@@ -149,12 +174,27 @@ describe("point-label callout graphics", () => {
         [-75.19, 39.8904, 6],
       ],
     };
-    const manager = new CalloutManager(viewer, { baseArrows: [baseArrow], flowChevronOptions: { spacingMeters: 1_000_000 } });
+    const manager = new CalloutManager(viewer, {
+      baseArrows: [baseArrow],
+      flowChevronOptions: { spacingMeters: 1_000_000 },
+    });
 
-    manager.showStopGraphics({ callouts: [], polygons: [], arrows: [], polylines: [] });
-    manager.showStopGraphics({ callouts: [], polygons: [], arrows: [], polylines: [] });
+    manager.showStopGraphics({
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
+    manager.showStopGraphics({
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
 
-    expect(addedEntities.filter((entity) => entity.id === baseArrow.id)).toHaveLength(1);
+    expect(
+      addedEntities.filter((entity) => entity.id === baseArrow.id),
+    ).toHaveLength(1);
     expect(addedEntities.filter((entity) => entity.billboard)).toHaveLength(1);
     expect(addedEntities[0].polyline.width).toBe(5);
     expect(viewer.entities.remove).not.toHaveBeenCalled();
@@ -174,11 +214,21 @@ describe("point-label callout graphics", () => {
         [-75.19, 39.8904, 6],
       ],
     };
-    const manager = new CalloutManager(viewer, { baseArrows: [baseArrow], enableFlowChevrons: false });
+    const manager = new CalloutManager(viewer, {
+      baseArrows: [baseArrow],
+      enableFlowChevrons: false,
+    });
 
-    manager.showStopGraphics({ callouts: [], polygons: [], arrows: [], polylines: [] });
+    manager.showStopGraphics({
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
 
-    expect(addedEntities.filter((entity) => entity.id === baseArrow.id)).toHaveLength(1);
+    expect(
+      addedEntities.filter((entity) => entity.id === baseArrow.id),
+    ).toHaveLength(1);
     expect(addedEntities.filter((entity) => entity.billboard)).toHaveLength(0);
   });
 
@@ -200,17 +250,43 @@ describe("point-label callout graphics", () => {
     };
     const manager = new CalloutManager(viewer, { baseArrows: [baseArrow] });
 
-    manager.showStopGraphics({ callouts: [], activeArrowIds: [baseArrow.id], polygons: [], arrows: [], polylines: [] });
+    manager.showStopGraphics({
+      callouts: [],
+      activeArrowIds: [baseArrow.id],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
 
-    const arrowEntity = addedEntities.find((entity) => entity.id === baseArrow.id);
+    const arrowEntity = addedEntities.find(
+      (entity) => entity.id === baseArrow.id,
+    );
     expect(arrowEntity.polyline.width).toBe(8);
-    expect(Cesium.Color.equals(getArrowColor(arrowEntity), Cesium.Color.fromCssColorString("#35f27a"))).toBe(true);
+    expect(
+      Cesium.Color.equals(
+        getArrowColor(arrowEntity),
+        Cesium.Color.fromCssColorString("#35f27a"),
+      ),
+    ).toBe(true);
 
-    manager.showStopGraphics({ callouts: [], activeArrowIds: [], polygons: [], arrows: [], polylines: [] });
+    manager.showStopGraphics({
+      callouts: [],
+      activeArrowIds: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
 
-    expect(addedEntities.filter((entity) => entity.id === baseArrow.id)).toHaveLength(1);
+    expect(
+      addedEntities.filter((entity) => entity.id === baseArrow.id),
+    ).toHaveLength(1);
     expect(arrowEntity.polyline.width).toBe(5);
-    expect(Cesium.Color.equals(getArrowColor(arrowEntity), Cesium.Color.fromCssColorString("#53d8ff"))).toBe(true);
+    expect(
+      Cesium.Color.equals(
+        getArrowColor(arrowEntity),
+        Cesium.Color.fromCssColorString("#53d8ff"),
+      ),
+    ).toBe(true);
   });
 
   test("resolves referenced arrow endpoints from current point-label callouts", () => {
@@ -236,24 +312,133 @@ describe("point-label callout graphics", () => {
     const manager = new CalloutManager(viewer, {
       baseArrows: [referencedArrow],
       baseCallouts: [callout, panelCallout],
+      enableFlowChevrons: false,
     });
 
-    manager.showStopGraphics({ callouts: [], activeCalloutIds: [], polygons: [], arrows: [], polylines: [] });
+    manager.showStopGraphics({
+      callouts: [],
+      activeCalloutIds: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
 
-    const arrowEntity = addedEntities.find((entity) => entity.id === referencedArrow.id);
-    const start = Cesium.Cartesian3.fromDegrees(callout.lon, callout.lat, callout.height);
-    const end = Cesium.Cartesian3.fromDegrees(panelCallout.lon, panelCallout.lat, panelCallout.height);
+    const arrowEntity = addedEntities.find(
+      (entity) => entity.id === referencedArrow.id,
+    );
+    const start = Cesium.Cartesian3.fromDegrees(
+      callout.lon,
+      callout.lat,
+      callout.height,
+    );
+    const end = Cesium.Cartesian3.fromDegrees(
+      panelCallout.lon,
+      panelCallout.lat,
+      panelCallout.height,
+    );
 
-    expect(Cesium.Cartesian3.equalsEpsilon(arrowEntity.polyline.positions[0], start, Cesium.Math.EPSILON7)).toBe(true);
-    expect(Cesium.Cartesian3.equalsEpsilon(arrowEntity.polyline.positions.at(-1), end, Cesium.Math.EPSILON7)).toBe(true);
+    expect(
+      Cesium.Cartesian3.equalsEpsilon(
+        arrowEntity.polyline.positions[0],
+        start,
+        Cesium.Math.EPSILON7,
+      ),
+    ).toBe(true);
+    expect(
+      Cesium.Cartesian3.equalsEpsilon(
+        arrowEntity.polyline.positions.at(-1),
+        end,
+        Cesium.Math.EPSILON7,
+      ),
+    ).toBe(true);
 
     panelCallout.lon = -75.19;
-    manager.showStopGraphics({ callouts: [], activeCalloutIds: [], polygons: [], arrows: [], polylines: [] });
+    manager.showStopGraphics({
+      callouts: [],
+      activeCalloutIds: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
 
-    const updatedEnd = Cesium.Cartesian3.fromDegrees(panelCallout.lon, panelCallout.lat, panelCallout.height);
-    expect(addedEntities.filter((entity) => entity.id === referencedArrow.id)).toHaveLength(1);
-    expect(Cesium.Cartesian3.equalsEpsilon(arrowEntity.polyline.positions.at(-1), updatedEnd, Cesium.Math.EPSILON7)).toBe(
-      true,
+    const updatedEnd = Cesium.Cartesian3.fromDegrees(
+      panelCallout.lon,
+      panelCallout.lat,
+      panelCallout.height,
     );
+    expect(
+      addedEntities.filter((entity) => entity.id === referencedArrow.id),
+    ).toHaveLength(1);
+    expect(
+      Cesium.Cartesian3.equalsEpsilon(
+        arrowEntity.polyline.positions.at(-1),
+        updatedEnd,
+        Cesium.Math.EPSILON7,
+      ),
+    ).toBe(true);
+  });
+
+  test("resamples referenced arrow endpoint heights from the rendered surface", () => {
+    const panelCallout = {
+      ...callout,
+      id: "large-panel-label",
+      label: "Large Panel Shop",
+      lon: -75.19075713256817,
+      lat: 39.8900063674073,
+      height: 0,
+    };
+    const sampledHeightsByLon = new Map([
+      [callout.lon.toFixed(6), 18],
+      [panelCallout.lon.toFixed(6), 31],
+    ]);
+    const { addedEntities, viewer } = createFakeViewer({
+      scene: {
+        sampleHeightSupported: true,
+        sampleHeight: vi.fn((cartographic) => {
+          const lon = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
+          return sampledHeightsByLon.get(lon);
+        }),
+      },
+    });
+    const referencedArrow = {
+      id: "flow-web-to-large-panel",
+      type: "curved-arrow-3d",
+      color: "#53d8ff",
+      width: 5,
+      sampleCount: 3,
+      startCalloutId: callout.id,
+      endCalloutId: panelCallout.id,
+      controlOffset: { lonDeg: 0, latDeg: 0, heightM: 4 },
+    };
+    const manager = new CalloutManager(viewer, {
+      baseArrows: [referencedArrow],
+      baseCallouts: [callout, panelCallout],
+      enableFlowChevrons: false,
+    });
+
+    manager.showStopGraphics({
+      callouts: [],
+      activeCalloutIds: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
+
+    const arrowEntity = addedEntities.find(
+      (entity) => entity.id === referencedArrow.id,
+    );
+    const start = Cesium.Cartographic.fromCartesian(
+      arrowEntity.polyline.positions[0],
+    );
+    const control = Cesium.Cartographic.fromCartesian(
+      arrowEntity.polyline.positions[1],
+    );
+    const end = Cesium.Cartographic.fromCartesian(
+      arrowEntity.polyline.positions.at(-1),
+    );
+
+    expect(start.height).toBeCloseTo(18, 2);
+    expect(control.height).toBeCloseTo((18 + 31) / 2 + 4, 2);
+    expect(end.height).toBeCloseTo(31, 2);
   });
 });

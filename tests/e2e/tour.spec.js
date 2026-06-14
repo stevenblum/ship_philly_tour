@@ -16,9 +16,15 @@ test("tour loads and advances", async ({ page }) => {
   await expect(page.locator(".compass")).toBeVisible();
   await expect(page.locator(".navigation-controls")).toBeVisible();
   await expect(page.locator(".distance-legend")).toBeVisible();
+  await expect(page.getByLabel("Google 3D")).toBeVisible();
+  await expect(page.getByLabel("Google 3D")).not.toBeChecked();
   const tourPanelBox = await page.locator("#tourPanel").boundingBox();
   const compassBox = await page.locator(".compass").boundingBox();
-  expect((tourPanelBox?.x ?? 0) + (tourPanelBox?.width ?? 0)).toBeLessThan(compassBox?.x ?? 0);
+  const toggleBox = await page.locator("#photorealisticToggle").boundingBox();
+  expect((tourPanelBox?.x ?? 0) + (tourPanelBox?.width ?? 0)).toBeLessThan(
+    compassBox?.x ?? 0,
+  );
+  expect(toggleBox?.y ?? 999).toBeLessThan(compassBox?.y ?? 0);
   await expect(page.getByRole("button", { name: /next/i })).toBeVisible();
 
   const firstTitle = await page.locator("#slideTitle").textContent();
@@ -32,7 +38,38 @@ test("tour loads and advances", async ({ page }) => {
   await expect(page.locator(".progress-dot")).toHaveCount(11);
 
   await page.locator(".progress-dot").nth(3).click();
-  await expect(page.locator("#slideTitle")).toHaveText("Panel Production Shops");
+  await expect(page.locator("#slideTitle")).toHaveText(
+    "Panel Production Shops",
+  );
   await expect(page.locator(".photo-item")).toHaveCount(5);
   expect(consoleErrors).toEqual([]);
+});
+
+// The 403 smoke test verifies the presenter-facing failure path without loading
+// real Google tiles or consuming Photorealistic 3D Tiles quota.
+test("Google 3D checkbox rolls back with a useful access-denied message", async ({
+  page,
+}) => {
+  await page.route("**/v1/assets/2275207/endpoint**", async (route) => {
+    await route.fulfill({
+      status: 403,
+      contentType: "application/json",
+      body: JSON.stringify({ code: "Forbidden", message: "" }),
+    });
+  });
+
+  await page.goto("/");
+
+  const toggle = page.locator("#photorealisticToggle");
+  const input = page.locator("#photorealisticToggleInput");
+  await expect(input).not.toBeChecked();
+
+  await input.click();
+
+  await expect(toggle).toHaveAttribute("data-scene-reason", "access-forbidden");
+  await expect(input).not.toBeChecked();
+  await expect(toggle).toHaveAttribute(
+    "title",
+    /Cesium ion denied access to Photorealistic 3D Tiles/,
+  );
 });

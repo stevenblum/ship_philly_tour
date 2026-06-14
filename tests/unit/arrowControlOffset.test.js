@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   approximateSurfaceDistanceMeters,
   buildRelativeControlOffset,
+  DEFAULT_ARROW_CONTROL_HEIGHT_M,
   DEFAULT_RELATIVE_CURVE_RATIO,
 } from "../../src/arrowControlOffset.js";
 
@@ -9,19 +10,35 @@ import {
 // without constructing Cesium entities or sampling Catmull-Rom splines.
 describe("relative arrow control offsets", () => {
   test("scales the control offset proportionally to route distance", () => {
-    const shortOffset = buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], { side: "left" });
-    const longOffset = buildRelativeControlOffset([0, 0, 0], [0.002, 0, 0], { side: "left" });
-    const shortDistance = approximateSurfaceDistanceMeters([0, 0, 0], [0.001, 0, 0]);
+    const shortOffset = buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], {
+      side: "left",
+    });
+    const longOffset = buildRelativeControlOffset([0, 0, 0], [0.002, 0, 0], {
+      side: "left",
+    });
+    const shortDistance = approximateSurfaceDistanceMeters(
+      [0, 0, 0],
+      [0.001, 0, 0],
+    );
 
     expect(shortDistance).toBeCloseTo(shortOffset.distanceM);
-    expect(shortOffset.offsetM).toBeCloseTo(shortOffset.distanceM * DEFAULT_RELATIVE_CURVE_RATIO);
-    expect(longOffset.offsetM).toBeCloseTo(longOffset.distanceM * DEFAULT_RELATIVE_CURVE_RATIO);
+    expect(shortOffset.offsetM).toBeCloseTo(
+      shortOffset.distanceM * DEFAULT_RELATIVE_CURVE_RATIO,
+    );
+    expect(longOffset.offsetM).toBeCloseTo(
+      longOffset.distanceM * DEFAULT_RELATIVE_CURVE_RATIO,
+    );
     expect(longOffset.offsetM).toBeCloseTo(shortOffset.offsetM * 2);
+    expect(shortOffset.heightM).toBe(DEFAULT_ARROW_CONTROL_HEIGHT_M);
   });
 
   test("uses left and right relative to arrow travel direction", () => {
-    const leftOffset = buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], { side: "left" });
-    const rightOffset = buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], { side: "right" });
+    const leftOffset = buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], {
+      side: "left",
+    });
+    const rightOffset = buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], {
+      side: "right",
+    });
 
     expect(leftOffset.latDeg).toBeGreaterThan(0);
     expect(rightOffset.latDeg).toBeLessThan(0);
@@ -30,8 +47,8 @@ describe("relative arrow control offsets", () => {
   });
 
   test("rejects unsupported side values so bad route data fails early", () => {
-    expect(() => buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], { side: "north" })).toThrow(
-      'Arrow control side must be "left" or "right"',
-    );
+    expect(() =>
+      buildRelativeControlOffset([0, 0, 0], [0.001, 0, 0], { side: "north" }),
+    ).toThrow('Arrow control side must be "left" or "right"');
   });
 });

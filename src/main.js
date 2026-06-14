@@ -2,11 +2,15 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import "./style.css";
 import { logger } from "./logger.js";
 import { resolveFlowChevronEnabled } from "./flowChevronLayer.js";
+import { initializePhotorealisticToggle } from "./photorealisticToggle.js";
 import { setupScene } from "./sceneSetup.js";
 import { formatSceneModeStatus } from "./sceneMode.js";
 import { shipyardLocations, toPointLabel } from "./shipyardLocations.js";
 import { processFlowArrows, tourStops } from "./tourStops.js";
-import { validateShipyardLocations, validateTourStops } from "./tourDataValidator.js";
+import {
+  validateShipyardLocations,
+  validateTourStops,
+} from "./tourDataValidator.js";
 import { TourManager } from "./tourManager.js";
 import { enableCoordinateAuthoring } from "./coordinateAuthoring.js";
 
@@ -26,7 +30,9 @@ function updateSceneStatus(sceneStatus) {
 
   sceneStatusElement.textContent = formatSceneModeStatus(sceneStatus);
   sceneStatusElement.dataset.sceneMode = sceneStatus.sceneMode;
-  sceneStatusElement.dataset.photorealistic = String(sceneStatus.photorealisticEnabled);
+  sceneStatusElement.dataset.photorealistic = String(
+    sceneStatus.photorealisticEnabled,
+  );
 }
 
 // buildPersistentCallouts combines KML-derived points with authored stop
@@ -54,7 +60,10 @@ function buildPersistentCallouts(locations, stops) {
 // bootstrap owns the async scene setup and guarantees the tour manager starts
 // only after the primary or fallback Cesium viewer is ready.
 async function bootstrap() {
-  reportValidationErrors("Shipyard location", validateShipyardLocations(shipyardLocations));
+  reportValidationErrors(
+    "Shipyard location",
+    validateShipyardLocations(shipyardLocations),
+  );
   reportValidationErrors("Tour stop", validateTourStops(tourStops));
 
   const { viewer, sceneStatus } = await setupScene("cesiumContainer");
@@ -66,6 +75,15 @@ async function bootstrap() {
     enableFlowChevrons: resolveFlowChevronEnabled(),
   });
   tourManager.initialize();
+  tourManager.refreshSurfaceAnchoredGraphics({
+    repeat: sceneStatus.photorealisticEnabled,
+  });
+  initializePhotorealisticToggle(viewer, sceneStatus, (nextSceneStatus) => {
+    updateSceneStatus(nextSceneStatus);
+    tourManager.refreshSurfaceAnchoredGraphics({
+      repeat: nextSceneStatus.photorealisticEnabled,
+    });
+  });
   enableCoordinateAuthoring(viewer);
   logger.info("Philadelphia Shipyard tour initialized.");
 }
@@ -75,5 +93,6 @@ async function bootstrap() {
 bootstrap().catch((error) => {
   logger.error("Failed to initialize Philadelphia Shipyard tour.", error);
   document.getElementById("slideTitle").textContent = "Tour failed to load";
-  document.getElementById("slideText").textContent = "Check the browser console for setup details.";
+  document.getElementById("slideText").textContent =
+    "Check the browser console for setup details.";
 });

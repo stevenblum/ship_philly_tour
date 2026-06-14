@@ -168,8 +168,51 @@ button:disabled {
   background: #1f8fff;
 }
 
+.photorealistic-toggle {
+  /* The standard Cesium Navigation compass starts at top: 100px, so this
+     presentation control sits above the plugin without customizing it. */
+  position: absolute;
+  top: 16px;
+  right: 12px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 28, 55, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  color: white;
+  cursor: pointer;
+  font-size: 0.82rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.photorealistic-toggle input {
+  /* Native checkbox semantics make the quota-consuming scene mode explicit and
+     keyboard-accessible without introducing a custom control. */
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #1f8fff;
+}
+
+.photorealistic-toggle.is-loading {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.photorealistic-toggle.is-error {
+  border-color: #ffcc66;
+}
+
 .tour-panel.is-hidden,
-.progress-dots.is-hidden {
+.progress-dots.is-hidden,
+.photorealistic-toggle.is-hidden {
   display: none;
 }
 
@@ -188,5 +231,13 @@ button:disabled {
 
   .photo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .photorealistic-toggle {
+    top: 10px;
+    right: 10px;
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: 0.78rem;
   }
 }
