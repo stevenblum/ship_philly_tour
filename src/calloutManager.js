@@ -1,0 +1,423 @@
+import * as Cesium from "cesium";
+import { resolveArrowControlOffset } from "./arrowControlOffset.js";
+import { FlowChevronLayer } from "./flowChevronLayer.js";
+import { logger } from "./logger.js";
+
+// sampleCurvedArrowPositions turns author-friendly control points into the
+// dense line strip Cesium needs to render a smooth 3D directional arrow.
+export function sampleCurvedArrowPositions(arrow) {
+  if ((arrow.coordinates?.length ?? 0) < 3) {
+    logger.warn(
+      `Curved arrow ${arrow.id} needs at least three control points.`,
+    );
+    return [];
+  }
+
+  const controlPoints = arrow.coordinates.map(([lon, lat, height = 0]) =>
+    Cesium.Cartesian3.fromDegrees(lon, lat, height),
+  );
+
+  const spline = new Cesium.CatmullRomSpline({
+    times: controlPoints.map((_, index) => index),
+    points: controlPoints,
+  });
+
+  const maxTime = controlPoints.length - 1;
+  const sampleCount = Math.max(arrow.sampleCount ?? 64, 2);
+
+  return Array.from({ length: sampleCount }, (_, index) => {
+    const time = (index / (sampleCount - 1)) * maxTime;
+    return spline.evaluate(time);
+  });
+}
+
+// buildCurvedArrowPolylineConfig creates a Cesium entity polyline config from
+// arrow data while keeping plain debug polylines separate from directional UI.
+// The active option supports the presentation requirement that the current
+// narrated route turns green while the full process-flow route remains visible.
+export function buildCurvedArrowPolylineConfig(arrow, options = {}) {
+  const active = options.active ?? false;
+  const inactiveWidth = arrow.width ?? 7;
+  const color = Cesium.Color.fromCssColorString(
+    active ? (arrow.activeColor ?? "#35f27a") : (arrow.color ?? "#53d8ff"),
+  );
+
+  return {
+    positions: sampleCurvedArrowPositions(arrow),
+    width: active
+      ? (arrow.activeWidth ?? Math.max(inactiveWidth + 2, 7))
+      : inactiveWidth,
+    material: new Cesium.PolylineArrowMaterialProperty(color),
+    arcType: Cesium.ArcType.NONE,
+    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+  };
+}
+
+// calloutCoordinate returns the same lon/lat/height tuple used by the visible
+// point-label entity, which keeps arrow endpoints tied to adjusted shop points.
+function calloutCoordinate(callout) {
+  return [callout.lon, callout.lat, callout.height ?? 0];
+}
+
+// resolvePointLabelHeightReference keeps ordinary shop markers anchored to the
+// visible surface while still allowing rare authored callouts to request an
+// absolute altitude for cinematic or debugging use.
+export function resolvePointLabelHeightReference(callout) {
+  if (callout.heightReference === "none") {
+    return Cesium.HeightReference.NONE;
+  }
+
+  if (callout.heightReference === "relativeToGround") {
+    return Cesium.HeightReference.RELATIVE_TO_GROUND;
+  }
+
+  return Cesium.HeightReference.CLAMP_TO_GROUND;
+}
+
+// buildPointLabelStyle keeps active and inactive marker styling in one place so
+// the persistent shop-label layer can update emphasis without recreating
+// entities on every tour stop change.
+function buildPointLabelStyle(callout, active = false) {
+  const activeColor = callout.activeColor ?? "#35f27a";
+  const inactiveColor = callout.color ?? "#53d8ff";
+
+  return {
+    pointColor: Cesium.Color.fromCssColorString(
+      active ? activeColor : inactiveColor,
+    ),
+    labelColor: active
+      ? Cesium.Color.fromCssColorString(activeColor)
+      : Cesium.Color.WHITE,
+    pointSize: active
+      ? (callout.activePixelSize ?? 17)
+      : (callout.pixelSize ?? 10),
+    font: active ? "bold 17px sans-serif" : "15px sans-serif",
+  };
+}
+
+// buildPointLabelEntityConfig centralizes point and label graphics so tests can
+// verify the surface-clamping contract without constructing a live Cesium
+// Viewer. Cesium treats CLAMP_TO_GROUND as terrain-and-3D-Tiles clamping when
+// the active 3D Tileset has collision enabled.
+export function buildPointLabelEntityConfig(callout, options = {}) {
+  const heightReference = resolvePointLabelHeightReference(callout);
+  const style = buildPointLabelStyle(callout, options.active ?? false);
+
+  return {
+    id: callout.id,
+    position: Cesium.Cartesian3.fromDegrees(
+      callout.lon,
+      callout.lat,
+      callout.height ?? 0,
+    ),
+    point: {
+      pixelSize: style.pointSize,
+      color: style.pointColor,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      heightReference,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+    label: {
+      text: callout.label,
+      font: style.font,
+      fillColor: style.labelColor,
+      outlineColor: Cesium.Color.BLACK,
+      outlineWidth: 3,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -18),
+      heightReference,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  };
+}
+
+// CalloutManager owns persistent shop labels plus transient stop graphics. Shop
+// labels stay visible for layout context, while active stop labels update style
+// and arrows/polygons/debug lines still clear between stops.
+export class CalloutManager {
+  constructor(viewer, options = {}) {
+    this.viewer = viewer;
+    this.baseCallouts = options.baseCallouts ?? [];
+    this.baseArrows = options.baseArrows ?? [];
+    this.basePointIds = new Set(this.baseCallouts.map((callout) => callout.id));
+    this.baseArrowIds = new Set(this.baseArrows.map((arrow) => arrow.id));
+    this.pointEntities = new Map();
+    this.arrowEntities = new Map();
+    this.transientPointIds = new Set();
+    this.transientArrowIds = new Set();
+    this.activeEntities = [];
+    const flowChevronOptions = options.flowChevronOptions ?? {};
+    this.flowChevronLayer = new FlowChevronLayer(viewer, {
+      ...flowChevronOptions,
+      enabled: options.enableFlowChevrons ?? flowChevronOptions.enabled ?? true,
+    });
+  }
+
+  // clear removes transient stop graphics and authored non-base point labels
+  // while preserving the persistent shop-label layer.
+  clear() {
+    for (const entity of this.activeEntities) {
+      this.viewer.entities.remove(entity);
+    }
+
+    for (const arrowId of this.transientArrowIds) {
+      this.flowChevronLayer.removeArrow(arrowId);
+      this.arrowEntities.delete(arrowId);
+    }
+
+    for (const pointId of this.transientPointIds) {
+      const entityRecord = this.pointEntities.get(pointId);
+
+      if (entityRecord) {
+        this.viewer.entities.remove(entityRecord.entity);
+        this.pointEntities.delete(pointId);
+      }
+    }
+
+    this.updatePointLabelStates(new Set());
+    this.activeEntities = [];
+    this.transientPointIds = new Set();
+    this.transientArrowIds = new Set();
+  }
+
+  // ensurePointLabel creates a point-label entity once and stores the source
+  // callout so active/inactive styling can be reapplied later without changing
+  // the entity's position or clamping behavior.
+  ensurePointLabel(callout, persistent = false) {
+    const existingRecord = this.pointEntities.get(callout.id);
+
+    if (existingRecord) {
+      return existingRecord.entity;
+    }
+
+    const entity = this.viewer.entities.add(
+      buildPointLabelEntityConfig(callout),
+    );
+    this.pointEntities.set(callout.id, { callout, entity });
+
+    if (!persistent) {
+      this.transientPointIds.add(callout.id);
+    }
+
+    return entity;
+  }
+
+  // ensureBasePointLabels initializes the persistent KML-derived shop and yard
+  // label layer the first time graphics are shown.
+  ensureBasePointLabels() {
+    for (const callout of this.baseCallouts) {
+      this.ensurePointLabel(callout, true);
+    }
+  }
+
+  // ensureBaseArrows initializes or restyles the persistent low production-flow
+  // route so the full shipbuilding sequence stays visible while active segments
+  // can turn green on a per-stop basis.
+  ensureBaseArrows(activeArrowIds = new Set()) {
+    for (const arrow of this.baseArrows) {
+      this.ensureArrow(arrow, true, activeArrowIds.has(arrow.id));
+    }
+  }
+
+  // ensureActivePointLabels adds any authored stop-specific labels that are not
+  // part of the persistent shop layer, preserving future custom callouts.
+  ensureActivePointLabels(callouts) {
+    for (const callout of callouts) {
+      this.ensurePointLabel(callout, this.basePointIds.has(callout.id));
+    }
+  }
+
+  // applyPointLabelState mutates only visual emphasis. It leaves position and
+  // heightReference untouched so labels remain clamped to terrain or 3D Tiles.
+  applyPointLabelState(entityRecord, active) {
+    const style = buildPointLabelStyle(entityRecord.callout, active);
+
+    entityRecord.entity.point.pixelSize = style.pointSize;
+    entityRecord.entity.point.color = style.pointColor;
+    entityRecord.entity.label.font = style.font;
+    entityRecord.entity.label.fillColor = style.labelColor;
+  }
+
+  // updatePointLabelStates turns only explicit active labels green, larger, and
+  // bold while returning context and inactive persistent labels to normal.
+  updatePointLabelStates(activePointIds) {
+    for (const [pointId, entityRecord] of this.pointEntities) {
+      this.applyPointLabelState(entityRecord, activePointIds.has(pointId));
+    }
+  }
+
+  // resolveReferencedArrow converts endpoint references into concrete sampled
+  // coordinates at render time. This avoids storing duplicate endpoint
+  // coordinates in arrow data, so moving a shop point also moves its arrows.
+  resolveReferencedArrow(arrow) {
+    if (arrow.coordinates) {
+      return arrow;
+    }
+
+    const startRecord = this.pointEntities.get(arrow.startCalloutId);
+    const endRecord = this.pointEntities.get(arrow.endCalloutId);
+
+    if (!startRecord || !endRecord) {
+      logger.warn(
+        `Curved arrow ${arrow.id} references a missing point-label endpoint.`,
+      );
+      return undefined;
+    }
+
+    const start = calloutCoordinate(startRecord.callout);
+    const end = calloutCoordinate(endRecord.callout);
+    const controlOffset = resolveArrowControlOffset(start, end, arrow);
+    const control = [
+      (start[0] + end[0]) / 2 + (controlOffset.lonDeg ?? 0),
+      (start[1] + end[1]) / 2 + (controlOffset.latDeg ?? 0),
+      controlOffset.heightM ?? 4,
+    ];
+
+    return {
+      ...arrow,
+      coordinates: [start, control, end],
+    };
+  }
+
+  // ensureArrow creates persistent and transient curved-arrow entities without
+  // duplicating base route arrows on every stop transition. Existing arrows are
+  // restyled here because active route highlighting is a stop-level state.
+  ensureArrow(arrow, persistent = false, active = false) {
+    const resolvedArrow = this.resolveReferencedArrow(arrow);
+
+    if (!resolvedArrow) {
+      return undefined;
+    }
+
+    const polyline = buildCurvedArrowPolylineConfig(resolvedArrow, { active });
+
+    if (polyline.positions.length === 0) return undefined;
+
+    const existingEntity = this.arrowEntities.get(arrow.id);
+
+    if (existingEntity) {
+      existingEntity.polyline.positions = polyline.positions;
+      existingEntity.polyline.width = polyline.width;
+      existingEntity.polyline.material = polyline.material;
+      this.syncArrowChevrons(arrow, polyline.positions, active);
+      return existingEntity;
+    }
+
+    const entity = this.viewer.entities.add({
+      id: arrow.id,
+      polyline,
+    });
+
+    this.arrowEntities.set(arrow.id, entity);
+
+    if (!persistent) {
+      this.transientArrowIds.add(arrow.id);
+      this.activeEntities.push(entity);
+    }
+
+    this.syncArrowChevrons(arrow, polyline.positions, active);
+
+    return entity;
+  }
+
+  // syncArrowChevrons delegates repeated directional chevrons to a standalone
+  // layer that follows the already-sampled arrow path and can be toggled off
+  // without changing the route arrows themselves.
+  syncArrowChevrons(arrow, positions, active = false) {
+    this.flowChevronLayer.syncArrow(arrow.id, positions, {
+      active,
+      color: arrow.color,
+      activeColor: arrow.activeColor,
+    });
+  }
+
+  // setFlowChevronsEnabled exposes the standalone chevron overlay toggle for
+  // future UI controls, authoring sessions, and tests.
+  setFlowChevronsEnabled(enabled) {
+    this.flowChevronLayer.setEnabled(enabled);
+  }
+
+  // showStopGraphics maps the tour data convention onto Cesium entity types:
+  // persistent labels, highlighted zones, curved arrows, and fallback/debug
+  // polylines.
+  showStopGraphics(stop) {
+    this.clear();
+    this.ensureBasePointLabels();
+    // activeArrowIds is deliberately separate from activeCalloutIds so a stop
+    // can highlight the route into the active shop without changing label
+    // visibility or emphasis rules.
+    const activeArrowIds = new Set(stop.activeArrowIds ?? []);
+    this.ensureBaseArrows(activeArrowIds);
+
+    const activeCallouts = stop.callouts ?? [];
+    // activeCalloutIds is intentionally explicit so overview and context labels
+    // never become green simply because they are visible.
+    const activePointIds = new Set(stop.activeCalloutIds ?? []);
+    this.ensureActivePointLabels(activeCallouts);
+    this.updatePointLabelStates(activePointIds);
+
+    for (const polygon of stop.polygons ?? []) {
+      this.addPolygon(polygon);
+    }
+
+    for (const arrow of stop.arrows ?? []) {
+      this.addCurvedArrow(arrow, activeArrowIds.has(arrow.id));
+    }
+
+    for (const polyline of stop.polylines ?? []) {
+      this.addPolyline(polyline);
+    }
+  }
+
+  // addPointLabel renders KML-derived and authored point labels with their
+  // anchor point clamped to the current surface so dots do not float above shops.
+  addPointLabel(callout) {
+    const entity = this.ensurePointLabel(callout);
+
+    return entity;
+  }
+
+  // addPolygon highlights production zones such as shop corridors or dock areas
+  // without implying those polygons are surveyed boundaries.
+  addPolygon(polygon) {
+    const flatCoordinates = polygon.coordinates.flat();
+    const color = Cesium.Color.fromCssColorString(polygon.color ?? "#53d8ff");
+    const entity = this.viewer.entities.add({
+      id: polygon.id,
+      polygon: {
+        hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoordinates),
+        material: color.withAlpha(polygon.alpha ?? 0.25),
+        outline: true,
+        outlineColor: Cesium.Color.WHITE,
+      },
+    });
+
+    this.activeEntities.push(entity);
+  }
+
+  // addCurvedArrow renders directional callouts using sampled Catmull-Rom
+  // points and Cesium's PolylineArrowMaterialProperty.
+  addCurvedArrow(arrow, active = false) {
+    this.ensureArrow(arrow, this.baseArrowIds.has(arrow.id), active);
+  }
+
+  // addPolyline is intentionally plain because polylines are reserved for
+  // fallback/debug lines and should not be confused with directional arrows.
+  addPolyline(polyline) {
+    const flatCoordinates = polyline.coordinates.flat();
+    const color = Cesium.Color.fromCssColorString(polyline.color ?? "#53d8ff");
+    const entity = this.viewer.entities.add({
+      id: polyline.id,
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArrayHeights(flatCoordinates),
+        width: polyline.width ?? 3,
+        material: color,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      },
+    });
+
+    this.activeEntities.push(entity);
+  }
+}

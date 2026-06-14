@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Philadelphia Shipyard Interactive Tour</title>
+  </head>
+  <body>
+    <div id="cesiumContainer"></div>
+
+    <div id="tourPanel" class="tour-panel" aria-live="polite">
+      <h1 id="slideTitle">Philadelphia Shipyard Tour</h1>
+      <p id="slideText">Loading tour...</p>
+
+      <div id="photoPanel" class="photo-panel"></div>
+      <div id="statsPanel" class="stats-panel"></div>
+
+      <div class="controls">
+        <button id="prevBtn" type="button">Back</button>
+        <button id="nextBtn" type="button">Next</button>
+      </div>
+    </div>
+
+    <div id="progressDots" class="progress-dots" aria-label="Tour stops"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,192 @@
+html,
+body,
+#cesiumContainer {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #0a1118;
+}
+
+.tour-panel {
+  /* Left placement preserves the plugin's default top-right compass/navigation
+     position without custom styling the third-party widget. */
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: min(380px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 20px;
+  background: rgba(8, 28, 55, 0.92);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+#slideTitle {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+#slideText {
+  line-height: 1.45;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.photo-grid.single {
+  grid-template-columns: 1fr;
+}
+
+/* Compact photo grids support five-shop panel-production stops without turning
+   the overlay into a long scrolling image list. */
+.photo-grid.compact {
+  gap: 8px;
+}
+
+.photo-item {
+  margin: 0;
+}
+
+.photo-item img,
+.photo-fallback {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.photo-fallback {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+/* Compact media uses a shorter frame so five images can be compared together
+   while keeping their labels readable. */
+.photo-grid.compact .photo-item img,
+.photo-grid.compact .photo-fallback {
+  aspect-ratio: 16 / 9;
+}
+
+.photo-item figcaption {
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+/* Smaller compact captions keep five shop labels inside the overlay width. */
+.photo-grid.compact .photo-item figcaption {
+  margin-top: 4px;
+  font-size: 0.72rem;
+}
+
+.stats-panel {
+  margin-top: 12px;
+}
+
+.stat-row {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 0;
+}
+
+.stat-row span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  background: #1f8fff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #4aa6ff;
+}
+
+button:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.progress-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  display: flex;
+  gap: 8px;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.progress-dot {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+
+.progress-dot.active {
+  background: #1f8fff;
+}
+
+.tour-panel.is-hidden,
+.progress-dots.is-hidden {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tour-panel {
+    top: 12px;
+    left: 12px;
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 80px);
+    padding: 14px;
+  }
+
+  #slideTitle {
+    font-size: 1.1rem;
+  }
+
+  .photo-grid {
+    grid-template-columns: 1fr;
+  }
+}

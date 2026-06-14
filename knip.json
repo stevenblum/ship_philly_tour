@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "index.html",
+    "tests/**/*.js"
+  ],
+  "project": ["src/**/*.js", "tests/**/*.js", "*.js"],
+  "ignoreDependencies": ["@testing-library/dom", "eslint", "prettier"]
+}

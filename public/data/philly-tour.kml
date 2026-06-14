@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="document">
+	<name>Philly Tour</name>
+	<gx:CascadingStyle kml:id="__managed_style_01080A23233FF1442990_highlight">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+				<displayMode>hide</displayMode>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_01080A23233FF1442990_normal">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+				<displayMode>hide</displayMode>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_01080A23233FF1442990">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_01080A23233FF1442990_normal</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_01080A23233FF1442990_highlight</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="085D2C81123FF1442989">
+		<name>Steel Storage Area</name>
+		<LookAt>
+			<longitude>-75.19170682088567</longitude>
+			<latitude>39.89023939221137</latitude>
+			<altitude>18.41812333387917</altitude>
+			<heading>83.5962967117606</heading>
+			<tilt>65.08299910685058</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>280.8364585369054</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.19154635188589,39.8905216581939,4.125336980968635</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0CFFFCFBD13FF1449B6C">
+		<name>Large Panel Line</name>
+		<LookAt>
+			<longitude>-75.19061948308114</longitude>
+			<latitude>39.89038784872065</latitude>
+			<altitude>3.594521041332244</altitude>
+			<heading>83.59699404530926</heading>
+			<tilt>65.08328608071118</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>316.0216072641924</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.19075713256817,39.8900063674073,18.018204053712</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="040E46EF1D3FF144F958">
+		<name>Double Bottom Line</name>
+		<LookAt>
+			<longitude>-75.19061948308114</longitude>
+			<latitude>39.89038784872065</latitude>
+			<altitude>3.594521041332244</altitude>
+			<heading>83.59699404530926</heading>
+			<tilt>65.08328608071118</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>316.0216072641924</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.19077244420436,39.88969508567276,21.20031016049998</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0244E0A4203FF145FADC">
+		<name>Web Shop</name>
+		<LookAt>
+			<longitude>-75.190143617625</longitude>
+			<latitude>39.89035093483132</latitude>
+			<altitude>18.22370040128327</altitude>
+			<heading>85.93534256747986</heading>
+			<tilt>70.4562449949444</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>121.5090397843778</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18994035699241,39.89031406521822,21.80799734858699</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0CB222D0703FF146815F">
+		<name>Bulkhead Shop</name>
+		<LookAt>
+			<longitude>-75.18911941244316</longitude>
+			<latitude>39.89037891924588</latitude>
+			<altitude>21.41760681466248</altitude>
+			<heading>85.93648131957112</heading>
+			<tilt>70.45706675369664</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>218.47191249959</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18958279608138,39.89035342797445,22.26920616734652</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="046983499A3FF146D870">
+		<name>Outfitting Shop</name>
+		<LookAt>
+			<longitude>-75.18911941244316</longitude>
+			<latitude>39.89037891924588</latitude>
+			<altitude>21.41760681466248</altitude>
+			<heading>85.93648131957112</heading>
+			<tilt>70.45706675369664</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>218.47191249959</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18921521895085,39.89038817522921,22.21015129931645</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="03F675CC2A3FF1470FE1">
+		<name>Curved Panel Shop</name>
+		<LookAt>
+			<longitude>-75.18911941244316</longitude>
+			<latitude>39.89037891924588</latitude>
+			<altitude>21.41760681466248</altitude>
+			<heading>85.93648131957112</heading>
+			<tilt>70.45706675369664</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>218.47191249959</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18882476074256,39.89041659861662,28.81652363403335</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="032F13B6683FF1474741">
+		<name>Section Asembly Shop</name>
+		<LookAt>
+			<longitude>-75.18911941244316</longitude>
+			<latitude>39.89037891924588</latitude>
+			<altitude>21.41760681466248</altitude>
+			<heading>85.93648131957112</heading>
+			<tilt>70.45706675369664</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>218.47191249959</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18845859064652,39.89044519171701,26.097376478271</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="046472439C3FF14791FF">
+		<name>Grand Block Shop</name>
+		<LookAt>
+			<longitude>-75.18921177550109</longitude>
+			<latitude>39.88872869345642</latitude>
+			<altitude>27.21801956952427</altitude>
+			<heading>85.93692913570371</heading>
+			<tilt>70.4574719099941</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>266.2782838926433</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18882979024634,39.88872808015807,9.567321138301356</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="00ECA6429F3FF147E080">
+		<name>Paint Shop</name>
+		<LookAt>
+			<longitude>-75.1875678824638</longitude>
+			<latitude>39.887096345015</latitude>
+			<altitude>3.665761959449525</altitude>
+			<heading>85.93798332248473</heading>
+			<tilt>70.45806864409444</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>336.6882845749205</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.18871980613957,39.88731435526774,33.4607997919598</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="07E503C0223FF149AC3F">
+		<name>Grand Block Assembly Area</name>
+		<LookAt>
+			<longitude>-75.19072379288015</longitude>
+			<latitude>39.88745438483825</latitude>
+			<altitude>2.390696842107527</altitude>
+			<heading>82.22243877813446</heading>
+			<tilt>35.25338278344393</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>833.1991889014898</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.19015505259583,39.8885150815882,3.657371597748869</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="07F9E3A8BA3FF14A1CE8">
+		<name>Building Dock</name>
+		<LookAt>
+			<longitude>-75.19093303166754</longitude>
+			<latitude>39.8873327979846</latitude>
+			<altitude>2.034355958635823</altitude>
+			<heading>80.70559243309637</heading>
+			<tilt>49.1132067933727</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>217.8160327929072</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.19072072770476,39.88720122928942,2.203360184659442</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0A70A6840D3FF14A7A1F">
+		<name>Outfitting Dock</name>
+		<LookAt>
+			<longitude>-75.19160111430162</longitude>
+			<latitude>39.88669859016171</latitude>
+			<altitude>2.497955475188101</altitude>
+			<heading>80.70664814958967</heading>
+			<tilt>49.11524198538427</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>517.1641849848675</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_01080A23233FF1442990</styleUrl>
+		<Point>
+			<coordinates>-75.19217773074095,39.88656858703229,1.034634275135133</coordinates>
+		</Point>
+	</Placemark>
+</Document>
+</kml>

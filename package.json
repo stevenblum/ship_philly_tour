@@ -1,0 +1,37 @@
+{
+  "name": "ship-philly-tour",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:demo": "VITE_SCENE_MODE=demo VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true vite",
+    "build": "vite build",
+    "build:github": "VITE_APP_BASE_PATH=/ship_philly_tour/ vite build",
+    "preview": "vite preview",
+    "test": "npm run test:unit",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit --no-file-parallelism",
+    "test:e2e": "playwright test --workers=1",
+    "test:build": "npm run test:build:local && npm run test:build:github",
+    "test:build:local": "npm run build && vitest run tests/build/local.test.js --no-file-parallelism",
+    "test:build:github": "npm run build:github && vitest run tests/build/github.test.js --no-file-parallelism",
+    "test:all": "npm run test:unit && npm run test:build && npm run test:e2e && npm run deadcode",
+    "deadcode": "knip"
+  },
+  "dependencies": {
+    "cesium": "^1.135.0",
+    "cesium-navigation-es6": "^3.0.9",
+    "vite-plugin-static-copy": "^3.1.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@testing-library/dom": "^10.4.1",
+    "eslint": "^9.39.1",
+    "jsdom": "^27.3.0",
+    "knip": "^5.70.1",
+    "prettier": "^3.7.4",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16"
+  }
+}
