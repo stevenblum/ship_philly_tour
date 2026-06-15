@@ -226,6 +226,7 @@ Unit tests must cover:
 - Required target-centered stop fields: `id`, `title`, `cameraMode`, `target.lonDeg`, `target.latDeg`, `view.headingDeg`, `view.pitchDeg`, and `view.rangeM`.
 - Optional target-centered fields: `target.heightM`, `target.radiusM`, and `view.durationSec`.
 - Explicit `absolutePose` stop fields: `camera.destination.lonDeg`, `camera.destination.latDeg`, `camera.destination.heightM`, `camera.orientation.headingDeg`, `camera.orientation.pitchDeg`, optional `camera.orientation.rollDeg`, and optional `camera.durationSec`.
+- Explicit `pathFlight` stop fields: `pathFlight.source`, `pathFlight.durationSec`, optional `pathFlight.altitudeOffsetM`, optional `pathFlight.altitudeOffsetFt`, optional `pathFlight.lookAheadSec`, and optional `pathFlight.pitchDeg`.
 - Valid coordinate ranges: longitude between `-180` and `180`, latitude between `-90` and `90`, positive target radius, positive view range, and positive camera duration when provided.
 - Unique tour stop ids.
 - KML-derived shipyard location records preserve placemark ids, names, coordinates, and optional `LookAt` camera hints.
@@ -236,7 +237,7 @@ Unit tests must cover:
 - `goToStop(id)` or equivalent stop lookup finds the correct stop and fails gracefully for invalid ids.
 - Base-path behavior: local/domain-root base path produces `/cesiumStatic`, GitHub Pages base path produces `/ship_philly_tour/cesiumStatic`, and Vite `base` and `CESIUM_BASE_URL` stay aligned.
 - Scene-mode parsing: default configuration resolves to lightweight mode, `?mode=demo` or equivalent explicit config resolves to photorealistic/demo mode, and the parser can be tested without constructing a Cesium viewer.
-- Camera-mode behavior: target-centered stops create a `Cesium.BoundingSphere` and `Cesium.HeadingPitchRange`, default missing `cameraMode` to `targetCentered`, and only use `camera.flyTo()` destinations for explicit `absolutePose` stops.
+- Camera-mode behavior: target-centered stops create a `Cesium.BoundingSphere` and `Cesium.HeadingPitchRange`, default missing `cameraMode` to `targetCentered`, only use `camera.flyTo()` destinations for explicit `absolutePose` stops, and use `pathFlight` only for hidden sampled camera-path slides.
 - Callout and arrow generation functions that convert tour data into Cesium entity configuration objects.
 - Curved-arrow generation produces a sampled path, uses the expected sample count, preserves the first sampled point as the start coordinate, preserves the last sampled point as the target coordinate, uses `Cesium.PolylineArrowMaterialProperty`, and does not rely on plain polylines for arrow behavior.
 
@@ -588,7 +589,49 @@ Use this graphic-data convention:
 - Production-flow arrow endpoints should reference point-label ids rather than duplicate endpoint coordinates, so adjusting a shop point also adjusts connected arrows.
 - `polylines[]` = fallback/debug lines only.
 
-### 9.2 Camera view authoring
+### 9.2 Final GeoPackage GIS overlay
+
+Use `Philly_Shipyard.gpkg` as the canonical source for the final manufacturing-equipment and roads overlay. Do not load the GeoPackage directly in the browser. Convert it into static Cesium-friendly assets that GitHub Pages can serve without GDAL:
+
+- `public/data/shipyard-gis/points.geojson`
+- `public/data/shipyard-gis/lines.geojson`
+- `public/data/shipyard-gis/polygons.geojson`
+- `public/data/shipyard-gis/styles.json`
+- `public/data/shipyard-gis/manifest.json`
+
+Add `npm run data:shipyard` as the repeatable refresh command. The command should use GDAL/`ogr2ogr` locally to export the `shipyard_geometry` layer, skip null geometries, preserve stable process-graph properties, and split output by geometry type. The generated files should be committed so runtime and GitHub Pages deployment only need static asset loading.
+
+Generate `styles.json` from the GeoPackage `layer_styles` QGIS style table and key runtime styles by `styleClass`, not by hard-coded feature names. Unknown future style classes should fall back by geometry type and log a useful warning instead of breaking the final slide.
+
+The final tour stop should be `MES Network`. It should:
+
+- Load the generated GeoJSON files with `Cesium.GeoJsonDataSource`.
+- Clamp points, lines, and polygons to the visible map/terrain/3D Tiles context where possible.
+- Render GIS point labels from `visible_label` with conservative sizing.
+- Show shop/storage boundaries, gantry boundaries, roads, fixed transfers, and process edges with QGIS-derived styles.
+- Hide or suppress the ordinary production-flow arrows and chevrons while the full GIS overlay is visible, then restore them when the presenter navigates back to ordinary tour slides.
+- Use a `targetCentered` camera for the curated final view: target `lonDeg: -75.19040073`, `latDeg: 39.88899696`, `heightM: -0.116`, `radiusM: 520`, with view `headingDeg: 84.993007`, `pitchDeg: -50.008353`, `rangeM: 767.741`, and `durationSec: 4`.
+
+### 9.3 WIP flight path
+
+Use `WIP_Tour.kml` as the canonical source for the WIP Flight slide. This KML includes old shop point placemarks that must not be used by the app. Extract only the placemark named `WIP Tour`, and only its `LineString` coordinates.
+
+Add `npm run data:wip-tour` as the repeatable refresh command. It should write `public/data/wip-tour-path.json` with route coordinates, route bounds, route length, `durationSec: 60`, `altitudeOffsetM: 15`, and `pitchDeg: -15`.
+
+Add a second-to-last stop titled `WIP Flight`, immediately before `MES Network`. The stop should use `cameraMode: "pathFlight"` and `pathFlight: { source: "data/wip-tour-path.json", durationSec: 60, altitudeOffsetM: 15, lookAheadSec: 1.5, pitchDeg: -15 }`.
+
+The WIP Flight slide should:
+
+- Start automatically when the slide becomes active.
+- Follow the generated line at 15 m above the current sampled Cesium surface where possible.
+- Fall back to KML height plus 15 m when surface sampling is unavailable.
+- Use `Cesium.SampledPositionProperty` with `Cesium.HermitePolynomialApproximation`.
+- Allocate sample times by cumulative route distance so speed is steady.
+- Keep the camera looking forward along the route using a short look-ahead sample while maintaining a 15-degree downward pitch.
+- Not draw the WIP polyline in the scene.
+- Stop and clean up the hidden moving entity when the presenter leaves the slide.
+
+### 9.4 Camera view authoring
 
 Default all authored tour stops to `cameraMode: "targetCentered"`. In this mode, the tour stop coordinate is the point that should appear at the center of the view, not the camera destination.
 
@@ -1300,14 +1343,15 @@ Implement photorealistic scene setup as part of the first working app, but keep 
 
 ## 14. Authoring Workflow for Tour Stops
 
-The coding agent should add a development-only coordinate capture mode.
+The coding agent should add a development-only coordinate capture mode and an always-available camera-copy button for presenter-driven camera refinement.
 
 Requirements:
 
 1. When the user clicks on the Cesium scene, log the clicked longitude, latitude, and height.
 2. Also log current camera heading, pitch, roll, and camera height.
-3. Add a button or keyboard shortcut to copy the current camera as a new tour stop template.
-4. Output a JSON/JS object that can be pasted into `tourStops.js`.
+3. Add a small upper-right `Copy Camera` button directly below the Google 3D checkbox. It should copy the current camera JSON directly to the clipboard without displaying the data in the UI.
+4. The copied camera payload should include current camera longitude, latitude, height/elevation, heading, pitch, roll, a current-stop id/title/index snapshot, an exact `absolutePose` snippet, and a `targetCentered` approximation when the center of the rendered view can be picked.
+5. Output a JSON/JS object that can be pasted into `tourStops.js`.
 
 Example console output:
 
@@ -1397,7 +1441,7 @@ The first working version should include:
 6. Google Photorealistic 3D Tiles load only when demo/photorealistic mode is explicitly selected and token permissions plus network access allow.
 7. Lightweight fallback works when photorealistic tiles are disabled, unavailable, or fail to load.
 8. KML-derived shop and yard placemarks from `Philly Tour.kml` / `public/data/philly-tour.kml` are used as the foundation for the initial tour data.
-9. Eleven audience-facing tour stops in this order:
+9. Thirteen audience-facing tour stops in this order:
    - Shipyard Overview.
    - Steel Storage Yard.
    - Cutting Shop.
@@ -1409,6 +1453,8 @@ The first working version should include:
    - Grand Block Assembly Area.
    - Building Dock.
    - Outfitting Dock.
+   - WIP Flight.
+   - MES Network.
 10. Next/back controls.
 11. Keyboard controls.
 12. Camera flyover transitions.
@@ -1437,6 +1483,8 @@ The first working version should include:
 35. Knip dead-code detection configured through `knip.json` and wired to `npm run deadcode`.
 36. Standard Cesium compass/navigation widget initialized through `cesium-navigation-es6` with the plugin defaults for compass, zoom controls, distance legend, and compass outer ring.
 37. Upper-right runtime checkbox that enables/disables Google Photorealistic 3D Tiles without changing code.
+38. Final MES Network slide generated from `Philly_Shipyard.gpkg` through `npm run data:shipyard` and loaded as a static GeoJSON/style overlay.
+39. Second-to-last WIP Flight slide generated from the `WIP Tour` LineString in `WIP_Tour.kml` through `npm run data:wip-tour`.
 
 ## 18. Acceptance Criteria
 
@@ -1452,6 +1500,7 @@ The implementation is acceptable when:
 - Google Photorealistic 3D Tiles are not loaded unless explicitly enabled.
 - `?mode=demo`, `?mode=photorealistic`, `?photorealistic=true`, or equivalent environment configuration enables high-detail mode.
 - The upper-right Google 3D checkbox is visible above the compass/zoom tools, starts unchecked in lightweight mode, and can enable high-detail mode at runtime.
+- The upper-right Copy Camera button is visible below the Google 3D checkbox, copies the current camera view to the clipboard, and does not display camera JSON in the UI.
 - Unchecking the Google 3D checkbox returns the app to lightweight scene context without breaking the active tour state.
 - If runtime photorealistic enabling fails, the Google 3D checkbox rolls back to unchecked and the app remains usable.
 - The active scene mode is logged without showing internal scene/build status in the presentation UI by default.
@@ -1474,7 +1523,11 @@ The implementation is acceptable when:
 - Shop-location point labels anchor to the map surface in lightweight mode and clamp to the rendered 3D Tiles surface in photorealistic mode when tiles load.
 - Photorealistic 3D Tiles are created with collision enabled so Cesium height references can resolve surface-clamped labels against the tile geometry.
 - The first tour stop appears automatically.
-- The tour sequence follows the specified eleven-stop production-flow order.
+- The tour sequence follows the specified thirteen-stop presentation order and ends with MES Network.
+- The WIP Flight slide appears immediately before MES Network.
+- The WIP Flight slide uses only the `WIP Tour` LineString from `WIP_Tour.kml`, ignores old shop placemarks, follows a hidden sampled camera path for about 60 seconds, and does not draw the route polyline.
+- The final MES Network slide loads the generated GeoJSON assets from `public/data/shipyard-gis/` and applies styles by `styleClass`.
+- The final GIS slide hides or suppresses ordinary production-flow arrows and chevrons while the full equipment, roads, process-edge, and boundary overlay is visible.
 - The overview stop does not show KML source or imported-location count rows.
 - The panel-production stop shows five shop image slots for Web Shop, Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop.
 - Clicking **Next** changes the text and flies the camera to the next stop.
@@ -1491,7 +1544,7 @@ The implementation is acceptable when:
 - Tour stop data can be edited in one place.
 - Tour stop data is validated enough to catch missing ids, missing target/view data, malformed camera-mode data, duplicate ids, malformed coordinates, and curved arrows with fewer than three control points.
 - Coordinate capture can output a usable stop template and has a fallback when `pickPosition()` returns undefined.
-- Development-only authoring tools are gated so they can be disabled for production builds.
+- Development-only click authoring tools are gated so they can be disabled for production builds; the Copy Camera button remains available as a lightweight presenter authoring control.
 - `.env.local`, `.env.production.local`, and other local secret env files are not committed to Git.
 - `.env.example` is committed and documents token and scene-mode flags.
 - The app can be built with `npm run build`.
@@ -1744,19 +1797,23 @@ The coding agent should proceed in this order:
 9. Convert KML placemarks into initial shop and yard location data.
 10. Implement presentation tour data using the KML-derived locations as the foundation.
 11. Add tour data and KML-derived location validation.
-12. Implement target-centered camera fly-to behavior with explicit absolute-pose support.
-13. Implement overlay panel.
-14. Implement next/back, keyboard navigation, Home/End, fullscreen, and hide/show overlay controls.
-15. Implement progress dots.
-16. Implement callout manager for labels, highlighted polygons, curved directional arrows, and fallback/debug polylines.
-17. Implement coordinate capture helper behind a development flag.
-18. Add placeholder photos and graceful missing-image handling.
-19. Add logger with normal and verbose authoring/debug output levels.
-20. Add unit tests, Playwright browser smoke tests, and build/deployment tests that run sequentially.
-21. Add Knip dead-code detection.
-22. Test `npm run dev`, `npm run dev:demo`, `npm run build`, `npm run build:github`, `npm run preview`, `npm run test:unit`, `npm run test:e2e`, `npm run test:build`, `npm run deadcode`, and `npm run test:all`.
-23. Write a short `README.md` explaining setup, token configuration, scene modes, authoring, testing, and deployment.
-24. Write and maintain `AGENTS.md` with important entry points and working guidance for future coding agents.
+12. Add `npm run data:shipyard` to convert `Philly_Shipyard.gpkg` into generated GeoJSON, style, and manifest assets for the final GIS overlay slide.
+13. Add `npm run data:wip-tour` to convert only the `WIP Tour` LineString from `WIP_Tour.kml` into generated hidden camera-path data.
+14. Implement target-centered camera fly-to behavior with explicit absolute-pose support.
+15. Implement overlay panel.
+16. Implement next/back, keyboard navigation, Home/End, fullscreen, and hide/show overlay controls.
+17. Implement progress dots.
+18. Implement callout manager for labels, highlighted polygons, curved directional arrows, and fallback/debug polylines.
+19. Implement final-slide GIS overlay loading through `Cesium.GeoJsonDataSource`.
+20. Implement WIP Flight sampled camera-path playback.
+21. Implement coordinate capture helper behind a development flag.
+22. Add placeholder photos and graceful missing-image handling.
+23. Add logger with normal and verbose authoring/debug output levels.
+24. Add unit tests, Playwright browser smoke tests, and build/deployment tests that run sequentially.
+25. Add Knip dead-code detection.
+26. Test `npm run dev`, `npm run dev:demo`, `npm run data:shipyard`, `npm run data:wip-tour`, `npm run build`, `npm run build:github`, `npm run preview`, `npm run test:unit`, `npm run test:e2e`, `npm run test:build`, `npm run deadcode`, and `npm run test:all`.
+27. Write a short `README.md` explaining setup, token configuration, scene modes, authoring, testing, data conversion, and deployment.
+28. Write and maintain `AGENTS.md` with important entry points and working guidance for future coding agents.
 
 ## 26. README Requirements
 
@@ -1774,6 +1831,8 @@ The agent should produce a `README.md` containing:
 - How to edit tour stops.
 - How target-centered camera mode works and when to use absolute-pose camera mode.
 - How `Philly Tour.kml` / `public/data/philly-tour.kml` seeds the initial shop and yard locations.
+- How `Philly_Shipyard.gpkg` is converted with `npm run data:shipyard` into `public/data/shipyard-gis/` assets for the final GIS overlay slide.
+- How `WIP_Tour.kml` is converted with `npm run data:wip-tour` into `public/data/wip-tour-path.json` for the hidden WIP Flight camera path.
 - How to add more KML placemarks or convert them into tour stops.
 - How to capture coordinates.
 - How to build for local/domain-root deployment and GitHub Pages project-site deployment.
@@ -1795,9 +1854,12 @@ The implementation must include an `AGENTS.md` file at the repository root. This
 - Important runtime entry points:
   - `index.html` for the HTML shell.
   - `src/main.js` for app startup.
+  - `src/cameraViewClipboard.js` for the upper-right camera-copy button and clipboard payload generation.
   - `src/sceneMode.js` for lightweight/demo mode parsing.
   - `src/sceneSetup.js` for Cesium viewer setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, and fallback behavior.
   - `src/tourStops.js` or `public/data/tour-stops.json` for tour data.
+  - `src/shipyardGisLayer.js` for the final-slide GeoJSON overlay.
+  - `src/wipFlightController.js` for the hidden WIP Tour sampled camera path.
   - `src/flowChevronLayer.js` for the standalone repeated-chevron overlay on production-flow arrow paths.
   - `src/cameraUtils.js` for target-centered and absolute-pose Cesium camera helpers.
   - `public/data/philly-tour.kml` for the initial KML-derived shipyard shop and yard placemarks.
@@ -1806,6 +1868,10 @@ The implementation must include an `AGENTS.md` file at the repository root. This
   - `src/coordinateAuthoring.js` for authoring-mode coordinate capture.
   - `src/tourDataValidator.js` for schema and coordinate validation.
   - `src/logger.js` for logging and authoring diagnostics.
+  - `scripts/convertShipyardGpkg.mjs` for repeatable GeoPackage-to-GeoJSON conversion.
+  - `scripts/convertWipTourKml.mjs` for repeatable `WIP_Tour.kml` LineString-to-JSON conversion.
+  - `public/data/shipyard-gis/` for generated final-slide GIS assets.
+  - `public/data/wip-tour-path.json` for generated WIP Flight camera-path data.
   - `vite.config.js` for Vite base path and Cesium static asset configuration.
 - Important test entry points:
   - `tests/unit/` for Vitest unit tests.
@@ -1814,6 +1880,8 @@ The implementation must include an `AGENTS.md` file at the repository root. This
 - Important commands:
   - `npm run dev`
   - `npm run dev:demo`
+  - `npm run data:shipyard`
+  - `npm run data:wip-tour`
   - `npm run build`
   - `npm run build:github`
   - `npm run preview`

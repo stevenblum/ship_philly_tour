@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "source": {
+    "file": "Philly_Shipyard.gpkg",
+    "layer": "shipyard_geometry",
+    "hashSha256": "c7c4007ac4bdd647fc34ca0fcd16e0f5f933d4985c8a0a81f7ab3c7b3eb71cfa",
+    "modifiedAt": "2026-06-15T01:36:35.304Z"
+  },
+  "bounds": {
+    "west": -75.1926207383917,
+    "south": 39.884300452938,
+    "east": -75.1876259510786,
+    "north": 39.8913717272719,
+    "srsId": 4326
+  },
+  "counts": {
+    "sourceFeatures": 193,
+    "exportedFeatures": 192,
+    "skippedNullGeometry": 1,
+    "byFile": {
+      "points": 69,
+      "lines": 92,
+      "polygons": 31
+    },
+    "byFeatureType": {
+      "process_area_point": 9,
+      "station": 60,
+      "fixed_transfer": 1,
+      "road_corridor": 18,
+      "approach_connector": 1,
+      "process_edge": 72,
+      "yard_area": 18,
+      "gantry_zone": 13
+    },
+    "byLayerCollection": {
+      "process_graph": 141,
+      "fixed_transfers": 1,
+      "roads": 19,
+      "shop_boundaries": 12,
+      "gantry_boundaries": 13,
+      "storage_boundaries": 6
+    },
+    "byStyleClass": {
+      "point_da190ade": 9,
+      "point_6cecac05": 28,
+      "point_35112ad1": 9,
+      "point_bf653fe1": 23,
+      "linestring_7848c9c3": 15,
+      "linestring_49311890": 19,
+      "linestring_8108fd7c": 58,
+      "polygon_9ad46f0a": 7,
+      "polygon_3a76f57d": 13,
+      "polygon_6bef2db3": 11
+    }
+  }
+}

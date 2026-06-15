@@ -19,6 +19,8 @@ export class TourManager {
         enableFlowChevrons: options.enableFlowChevrons ?? true,
         flowChevronOptions: options.flowChevronOptions ?? {},
       });
+    this.shipyardGisLayer = options.shipyardGisLayer;
+    this.wipFlightController = options.wipFlightController;
     this.isChromeHidden = false;
 
     this.tourPanel = document.getElementById("tourPanel");
@@ -30,6 +32,9 @@ export class TourManager {
     this.progressDots = document.getElementById("progressDots");
     this.sceneStatus = document.getElementById("sceneStatus");
     this.photorealisticToggle = document.getElementById("photorealisticToggle");
+    this.cameraViewCopyButton = document.getElementById(
+      "cameraViewCopyButton",
+    );
     this.nextBtn = document.getElementById("nextBtn");
     this.prevBtn = document.getElementById("prevBtn");
     this.surfaceRefreshTimers = [];
@@ -132,12 +137,32 @@ export class TourManager {
     return this.tourStops.findIndex((stop) => stop.id === stopRef);
   }
 
+  // getCurrentStopSnapshot provides the clipboard authoring control with slide
+  // context without exposing mutable tour-stop objects to the UI helper.
+  getCurrentStopSnapshot() {
+    const stop = this.tourStops[this.currentIndex];
+
+    if (!stop) return null;
+
+    return {
+      index: this.currentIndex,
+      stopNumber: this.currentIndex + 1,
+      id: stop.id,
+      title: stop.title,
+      target: stop.target,
+      view: stop.view,
+      camera: stop.camera,
+      pathFlight: stop.pathFlight,
+    };
+  }
+
   // goToStop is the central state transition for overlay content, progress,
   // Cesium graphics, and camera movement.
   goToStop(stopRef, options = {}) {
     const requestedIndex = this.findStopIndex(stopRef);
     const nextIndex =
       requestedIndex === -1 ? this.currentIndex : requestedIndex;
+    this.wipFlightController?.stop?.();
     this.currentIndex = Math.max(
       0,
       Math.min(nextIndex, this.tourStops.length - 1),
@@ -148,11 +173,28 @@ export class TourManager {
     this.updateProgressDots();
     this.updateControls();
     this.calloutManager.showStopGraphics(stop);
+    this.updateShipyardGisOverlay(stop);
     this.flyCamera(stop, options);
 
     if (this.viewer.shipyardPhotorealisticTileset) {
       this.refreshSurfaceAnchoredGraphics({ repeat: true });
     }
+  }
+
+  // updateShipyardGisOverlay treats the full manufacturing-equipment GIS layer
+  // as a final-slide-only presentation layer. It is intentionally controlled by
+  // tour data so future slides can opt in without changing navigation code.
+  updateShipyardGisOverlay(stop) {
+    if (!this.shipyardGisLayer) return;
+
+    const showOverlay = stop.gisOverlay?.show === true;
+
+    if (showOverlay) {
+      this.shipyardGisLayer.show();
+      return;
+    }
+
+    this.shipyardGisLayer.hide();
   }
 
   // updateOverlay renders text, photos, and stats using textContent/DOM nodes so
@@ -232,6 +274,13 @@ export class TourManager {
   // flyCamera uses the stop camera mode so target-centered stops frame the
   // authored target, while absolutePose stops still support exact camera shots.
   flyCamera(stop, options = {}) {
+    if (stop.cameraMode === "pathFlight") {
+      this.wipFlightController?.start(stop.pathFlight).catch((error) => {
+        logger.warn("WIP flight did not start.", error);
+      });
+      return;
+    }
+
     if (options.instant) {
       setViewForStop(this.viewer, stop);
       return;
@@ -291,6 +340,10 @@ export class TourManager {
     this.progressDots.classList.toggle("is-hidden", this.isChromeHidden);
     this.sceneStatus?.classList.toggle("is-hidden", this.isChromeHidden);
     this.photorealisticToggle?.classList.toggle(
+      "is-hidden",
+      this.isChromeHidden,
+    );
+    this.cameraViewCopyButton?.classList.toggle(
       "is-hidden",
       this.isChromeHidden,
     );

@@ -45,6 +45,7 @@ function createDom() {
       <button id="nextBtn" type="button">Next</button>
     </div>
     <div id="progressDots"></div>
+    <button id="cameraViewCopyButton" type="button">Copy Camera</button>
   `;
 }
 
@@ -66,9 +67,13 @@ function createViewerStub() {
 function createManager() {
   const viewer = createViewerStub();
   const calloutManager = { showStopGraphics: vi.fn() };
-  const manager = new TourManager(viewer, stops, { calloutManager });
+  const shipyardGisLayer = { show: vi.fn(), hide: vi.fn() };
+  const manager = new TourManager(viewer, stops, {
+    calloutManager,
+    shipyardGisLayer,
+  });
   manager.initialize();
-  return { manager, viewer, calloutManager };
+  return { manager, viewer, calloutManager, shipyardGisLayer };
 }
 
 describe("TourManager navigation", () => {
@@ -110,5 +115,100 @@ describe("TourManager navigation", () => {
 
     manager.goToStop("missing");
     expect(manager.currentIndex).toBe(1);
+  });
+
+  test("exposes current stop context for camera copy authoring", () => {
+    const { manager } = createManager();
+
+    manager.goToStop("second");
+
+    expect(manager.getCurrentStopSnapshot()).toMatchObject({
+      index: 1,
+      stopNumber: 2,
+      id: "second",
+      title: "Second Stop",
+      target: stops[1].target,
+      view: stops[1].view,
+    });
+  });
+
+  test("toggles the final GIS overlay from stop data", () => {
+    const viewer = createViewerStub();
+    const calloutManager = { showStopGraphics: vi.fn() };
+    const shipyardGisLayer = { show: vi.fn(), hide: vi.fn() };
+    const gisStops = [
+      stops[0],
+      { ...stops[1], gisOverlay: { show: true } },
+    ];
+    const manager = new TourManager(viewer, gisStops, {
+      calloutManager,
+      shipyardGisLayer,
+    });
+
+    manager.initialize();
+    expect(shipyardGisLayer.hide).toHaveBeenCalledTimes(1);
+    expect(shipyardGisLayer.show).not.toHaveBeenCalled();
+
+    manager.next();
+    expect(shipyardGisLayer.show).toHaveBeenCalledTimes(1);
+
+    manager.previous();
+    expect(shipyardGisLayer.hide).toHaveBeenCalledTimes(2);
+  });
+
+  test("starts pathFlight slides and stops them on navigation", () => {
+    const viewer = createViewerStub();
+    const calloutManager = { showStopGraphics: vi.fn() };
+    const wipFlightController = {
+      start: vi.fn(() => Promise.resolve()),
+      stop: vi.fn(),
+    };
+    const pathFlightStop = {
+      ...stops[1],
+      id: "wip-flight",
+      title: "WIP Flight",
+      cameraMode: "pathFlight",
+      pathFlight: {
+        source: "data/wip-tour-path.json",
+        durationSec: 60,
+        altitudeOffsetM: 15,
+        lookAheadSec: 1.5,
+        pitchDeg: -15,
+      },
+      target: undefined,
+      view: undefined,
+    };
+    const manager = new TourManager(viewer, [stops[0], pathFlightStop], {
+      calloutManager,
+      wipFlightController,
+    });
+
+    manager.initialize();
+    expect(wipFlightController.stop).toHaveBeenCalledTimes(1);
+
+    manager.next();
+    expect(wipFlightController.stop).toHaveBeenCalledTimes(2);
+    expect(wipFlightController.start).toHaveBeenCalledWith(
+      pathFlightStop.pathFlight,
+    );
+    expect(viewer.camera.flyToBoundingSphere).not.toHaveBeenCalled();
+
+    manager.previous();
+    expect(wipFlightController.stop).toHaveBeenCalledTimes(3);
+  });
+
+  test("hides camera copy button with presentation chrome", () => {
+    const { manager } = createManager();
+    const cameraViewCopyButton = document.getElementById(
+      "cameraViewCopyButton",
+    );
+
+    manager.togglePresentationChrome();
+
+    expect(cameraViewCopyButton.classList.contains("is-hidden")).toBe(true);
+
+    manager.togglePresentationChrome();
+
+    expect(cameraViewCopyButton.classList.contains("is-hidden")).toBe(false);
   });
 });

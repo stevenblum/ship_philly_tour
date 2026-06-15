@@ -9,6 +9,8 @@
     "build": "vite build",
     "build:github": "VITE_APP_BASE_PATH=/ship_philly_tour/ vite build",
     "preview": "vite preview",
+    "data:shipyard": "node scripts/convertShipyardGpkg.mjs",
+    "data:wip-tour": "node scripts/convertWipTourKml.mjs",
     "test": "npm run test:unit",
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit --no-file-parallelism",

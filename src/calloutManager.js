@@ -294,7 +294,21 @@ export class CalloutManager {
   // label layer the first time graphics are shown.
   ensureBasePointLabels() {
     for (const callout of this.baseCallouts) {
-      this.ensurePointLabel(callout, true);
+      const entity = this.ensurePointLabel(callout, true);
+      entity.show = true;
+    }
+  }
+
+  // setBasePointLabelsVisible lets special overview layers, such as the final
+  // full GIS slide, hide the tour's persistent shop labels without destroying
+  // their clamped entity records.
+  setBasePointLabelsVisible(visible) {
+    for (const pointId of this.basePointIds) {
+      const entityRecord = this.pointEntities.get(pointId);
+
+      if (entityRecord) {
+        entityRecord.entity.show = visible;
+      }
     }
   }
 
@@ -304,6 +318,23 @@ export class CalloutManager {
   ensureBaseArrows(activeArrowIds = new Set()) {
     for (const arrow of this.baseArrows) {
       this.ensureArrow(arrow, true, activeArrowIds.has(arrow.id));
+    }
+  }
+
+  // setBaseArrowsVisible hides or restores the persistent production-flow layer
+  // independently from transient stop arrows. Chevrons are removed while hidden
+  // and recreated by ensureBaseArrows when ordinary slides are shown again.
+  setBaseArrowsVisible(visible) {
+    for (const arrowId of this.baseArrowIds) {
+      const entity = this.arrowEntities.get(arrowId);
+
+      if (entity) {
+        entity.show = visible;
+      }
+
+      if (!visible) {
+        this.flowChevronLayer.removeArrow(arrowId, { forgetSource: false });
+      }
     }
   }
 
@@ -393,6 +424,7 @@ export class CalloutManager {
     const existingEntity = this.arrowEntities.get(arrow.id);
 
     if (existingEntity) {
+      existingEntity.show = true;
       existingEntity.polyline.positions = polyline.positions;
       existingEntity.polyline.width = polyline.width;
       existingEntity.polyline.material = polyline.material;
@@ -441,8 +473,20 @@ export class CalloutManager {
   refreshSurfaceAnchoredArrows() {
     if (!this.currentStop) return;
 
-    this.ensureBasePointLabels();
-    this.ensureBaseArrows(this.currentActiveArrowIds);
+    const showBaseCallouts = this.currentStop.showBaseCallouts !== false;
+    const showBaseArrows = this.currentStop.showBaseArrows !== false;
+
+    if (showBaseCallouts) {
+      this.ensureBasePointLabels();
+    } else {
+      this.setBasePointLabelsVisible(false);
+    }
+
+    if (showBaseArrows) {
+      this.ensureBaseArrows(this.currentActiveArrowIds);
+    } else {
+      this.setBaseArrowsVisible(false);
+    }
 
     for (const arrow of this.currentStop.arrows ?? []) {
       this.addCurvedArrow(arrow, this.currentActiveArrowIds.has(arrow.id));
@@ -454,14 +498,27 @@ export class CalloutManager {
   // polylines.
   showStopGraphics(stop) {
     this.clear();
-    this.ensureBasePointLabels();
+    const showBaseCallouts = stop.showBaseCallouts !== false;
+    const showBaseArrows = stop.showBaseArrows !== false;
+
+    if (showBaseCallouts) {
+      this.ensureBasePointLabels();
+    } else {
+      this.setBasePointLabelsVisible(false);
+    }
+
     // activeArrowIds is deliberately separate from activeCalloutIds so a stop
     // can highlight the route into the active shop without changing label
     // visibility or emphasis rules.
     const activeArrowIds = new Set(stop.activeArrowIds ?? []);
     this.currentStop = stop;
     this.currentActiveArrowIds = activeArrowIds;
-    this.ensureBaseArrows(activeArrowIds);
+
+    if (showBaseArrows) {
+      this.ensureBaseArrows(activeArrowIds);
+    } else {
+      this.setBaseArrowsVisible(false);
+    }
 
     const activeCallouts = stop.callouts ?? [];
     // activeCalloutIds is intentionally explicit so overview and context labels

@@ -38,6 +38,14 @@ const CURVED_PANEL_SHOP_SOURCE_POINT = {
   height: 28.81652363403335,
 };
 
+// GRAND_BLOCK_ASSEMBLY_AREA_SOURCE_POINT preserves the raw KML coordinate while
+// the rendered tour point is shifted south/east to match the presentation layout.
+const GRAND_BLOCK_ASSEMBLY_AREA_SOURCE_POINT = {
+  lon: -75.19015505259583,
+  lat: 39.8885150815882,
+  height: 3.657371597748869,
+};
+
 // pointOffsetByMeters applies small local north/east offsets in WGS84 degrees.
 // It uses the source latitude to scale longitude movement by cos(latitude),
 // which is accurate enough for yard-scale presentation placement adjustments.
@@ -249,11 +257,11 @@ export const shipyardLocations = [
     id: "07E503C0223FF149AC3F",
     slug: "grand-block-assembly-area",
     name: "Grand Block Assembly Area",
-    point: {
-      lon: -75.19015505259583,
-      lat: 39.8885150815882,
-      height: 3.657371597748869,
-    },
+    sourcePoint: GRAND_BLOCK_ASSEMBLY_AREA_SOURCE_POINT,
+    point: pointOffsetByMeters(GRAND_BLOCK_ASSEMBLY_AREA_SOURCE_POINT, {
+      northMeters: -150,
+      eastMeters: 15,
+    }),
     lookAt: {
       lon: -75.19072379288015,
       lat: 39.88745438483825,

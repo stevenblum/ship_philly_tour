@@ -1,0 +1,506 @@
+{
+  "version": 1,
+  "source": {
+    "file": "WIP_Tour.kml",
+    "placemarkName": "WIP Tour"
+  },
+  "durationSec": 60,
+  "altitudeOffsetM": 15,
+  "pitchDeg": -15,
+  "coordinateCount": 81,
+  "routeLengthM": 2520.976,
+  "bounds": {
+    "west": -75.19262950854174,
+    "south": 39.88553590477211,
+    "east": -75.18790720548243,
+    "north": 39.89116816507373
+  },
+  "coordinates": [
+    {
+      "lonDeg": -75.19262950854174,
+      "latDeg": 39.88987600710731,
+      "heightM": 0,
+      "cumulativeDistanceM": 0
+    },
+    {
+      "lonDeg": -75.19259049541412,
+      "latDeg": 39.89001381733369,
+      "heightM": 0,
+      "cumulativeDistanceM": 15.681
+    },
+    {
+      "lonDeg": -75.19255341743887,
+      "latDeg": 39.89018815779006,
+      "heightM": 0,
+      "cumulativeDistanceM": 35.323
+    },
+    {
+      "lonDeg": -75.19250813605417,
+      "latDeg": 39.89041325861641,
+      "heightM": 0,
+      "cumulativeDistanceM": 60.65
+    },
+    {
+      "lonDeg": -75.19247407542953,
+      "latDeg": 39.89053897505043,
+      "heightM": 0,
+      "cumulativeDistanceM": 74.928
+    },
+    {
+      "lonDeg": -75.19236974442218,
+      "latDeg": 39.89063392781203,
+      "heightM": 0,
+      "cumulativeDistanceM": 88.737
+    },
+    {
+      "lonDeg": -75.19219341016141,
+      "latDeg": 39.89069508890322,
+      "heightM": 0,
+      "cumulativeDistanceM": 105.247
+    },
+    {
+      "lonDeg": -75.19156859496786,
+      "latDeg": 39.89075757255216,
+      "heightM": 0,
+      "cumulativeDistanceM": 159.005
+    },
+    {
+      "lonDeg": -75.1911000768562,
+      "latDeg": 39.89079637143444,
+      "heightM": 0,
+      "cumulativeDistanceM": 199.21
+    },
+    {
+      "lonDeg": -75.1910246827089,
+      "latDeg": 39.89082078589651,
+      "heightM": 0,
+      "cumulativeDistanceM": 206.192
+    },
+    {
+      "lonDeg": -75.1908479516502,
+      "latDeg": 39.89084541457041,
+      "heightM": 0,
+      "cumulativeDistanceM": 221.516
+    },
+    {
+      "lonDeg": -75.190633391956,
+      "latDeg": 39.89088796452742,
+      "heightM": 0,
+      "cumulativeDistanceM": 240.423
+    },
+    {
+      "lonDeg": -75.19049239459252,
+      "latDeg": 39.8909714513195,
+      "heightM": 0,
+      "cumulativeDistanceM": 255.618
+    },
+    {
+      "lonDeg": -75.19026414031057,
+      "latDeg": 39.89100368735757,
+      "heightM": 0,
+      "cumulativeDistanceM": 275.419
+    },
+    {
+      "lonDeg": -75.18832302001753,
+      "latDeg": 39.89116816507373,
+      "heightM": 0,
+      "cumulativeDistanceM": 442.035
+    },
+    {
+      "lonDeg": -75.18820150588573,
+      "latDeg": 39.89114642937555,
+      "heightM": 0,
+      "cumulativeDistanceM": 452.68
+    },
+    {
+      "lonDeg": -75.1880912943218,
+      "latDeg": 39.89107676479278,
+      "heightM": 0,
+      "cumulativeDistanceM": 464.863
+    },
+    {
+      "lonDeg": -75.18804249696106,
+      "latDeg": 39.89092348986171,
+      "heightM": 0,
+      "cumulativeDistanceM": 482.407
+    },
+    {
+      "lonDeg": -75.18790720548243,
+      "latDeg": 39.88966670009172,
+      "heightM": 0,
+      "cumulativeDistanceM": 622.632
+    },
+    {
+      "lonDeg": -75.18792854126707,
+      "latDeg": 39.88953479764987,
+      "heightM": 0,
+      "cumulativeDistanceM": 637.411
+    },
+    {
+      "lonDeg": -75.1880576712076,
+      "latDeg": 39.88941735827343,
+      "heightM": 0,
+      "cumulativeDistanceM": 654.497
+    },
+    {
+      "lonDeg": -75.1880905320921,
+      "latDeg": 39.88933760764228,
+      "heightM": 0,
+      "cumulativeDistanceM": 663.797
+    },
+    {
+      "lonDeg": -75.18806878639171,
+      "latDeg": 39.88914618974595,
+      "heightM": 0,
+      "cumulativeDistanceM": 685.163
+    },
+    {
+      "lonDeg": -75.18804707551955,
+      "latDeg": 39.88892354807251,
+      "heightM": 0,
+      "cumulativeDistanceM": 709.988
+    },
+    {
+      "lonDeg": -75.18794654858344,
+      "latDeg": 39.88810745547458,
+      "heightM": 0,
+      "cumulativeDistanceM": 801.138
+    },
+    {
+      "lonDeg": -75.1879713910525,
+      "latDeg": 39.88802783125221,
+      "heightM": 0,
+      "cumulativeDistanceM": 810.242
+    },
+    {
+      "lonDeg": -75.18803983181542,
+      "latDeg": 39.88795854981501,
+      "heightM": 0,
+      "cumulativeDistanceM": 819.909
+    },
+    {
+      "lonDeg": -75.18822588242305,
+      "latDeg": 39.88792479432033,
+      "heightM": 0,
+      "cumulativeDistanceM": 836.221
+    },
+    {
+      "lonDeg": -75.18905093289324,
+      "latDeg": 39.88786016195308,
+      "heightM": 0,
+      "cumulativeDistanceM": 906.98
+    },
+    {
+      "lonDeg": -75.18926348499434,
+      "latDeg": 39.8878469613938,
+      "heightM": 0,
+      "cumulativeDistanceM": 925.174
+    },
+    {
+      "lonDeg": -75.18935909632108,
+      "latDeg": 39.8878063793068,
+      "heightM": 0,
+      "cumulativeDistanceM": 934.497
+    },
+    {
+      "lonDeg": -75.18940823709778,
+      "latDeg": 39.88772238825187,
+      "heightM": 0,
+      "cumulativeDistanceM": 944.734
+    },
+    {
+      "lonDeg": -75.18944167754225,
+      "latDeg": 39.88758656530637,
+      "heightM": 0,
+      "cumulativeDistanceM": 960.104
+    },
+    {
+      "lonDeg": -75.1895750419636,
+      "latDeg": 39.88750302687045,
+      "heightM": 0,
+      "cumulativeDistanceM": 974.793
+    },
+    {
+      "lonDeg": -75.19001411774067,
+      "latDeg": 39.88742763159826,
+      "heightM": 0,
+      "cumulativeDistanceM": 1013.182
+    },
+    {
+      "lonDeg": -75.19005333723743,
+      "latDeg": 39.88737460730054,
+      "heightM": 0,
+      "cumulativeDistanceM": 1019.961
+    },
+    {
+      "lonDeg": -75.19001474739083,
+      "latDeg": 39.88712964904678,
+      "heightM": 0,
+      "cumulativeDistanceM": 1047.398
+    },
+    {
+      "lonDeg": -75.18987130538157,
+      "latDeg": 39.88644718898587,
+      "heightM": 0,
+      "cumulativeDistanceM": 1124.264
+    },
+    {
+      "lonDeg": -75.18972282133588,
+      "latDeg": 39.88574476072958,
+      "heightM": 0,
+      "cumulativeDistanceM": 1203.392
+    },
+    {
+      "lonDeg": -75.189683504576,
+      "latDeg": 39.88560054676621,
+      "heightM": 0,
+      "cumulativeDistanceM": 1219.775
+    },
+    {
+      "lonDeg": -75.18970443691289,
+      "latDeg": 39.88557364742393,
+      "heightM": 0,
+      "cumulativeDistanceM": 1223.258
+    },
+    {
+      "lonDeg": -75.18974414697935,
+      "latDeg": 39.88555593246203,
+      "heightM": 0,
+      "cumulativeDistanceM": 1227.178
+    },
+    {
+      "lonDeg": -75.19000599393918,
+      "latDeg": 39.88553590477211,
+      "heightM": 0,
+      "cumulativeDistanceM": 1249.63
+    },
+    {
+      "lonDeg": -75.19007391492313,
+      "latDeg": 39.88555708630358,
+      "heightM": 0,
+      "cumulativeDistanceM": 1255.885
+    },
+    {
+      "lonDeg": -75.19010183514843,
+      "latDeg": 39.88562391374734,
+      "heightM": 0,
+      "cumulativeDistanceM": 1263.689
+    },
+    {
+      "lonDeg": -75.1902709384009,
+      "latDeg": 39.88680362983504,
+      "heightM": 0,
+      "cumulativeDistanceM": 1395.659
+    },
+    {
+      "lonDeg": -75.19036083967208,
+      "latDeg": 39.8874880278263,
+      "heightM": 0,
+      "cumulativeDistanceM": 1472.146
+    },
+    {
+      "lonDeg": -75.19035569880796,
+      "latDeg": 39.88755224747256,
+      "heightM": 0,
+      "cumulativeDistanceM": 1479.3
+    },
+    {
+      "lonDeg": -75.19030112708268,
+      "latDeg": 39.88755830140366,
+      "heightM": 0,
+      "cumulativeDistanceM": 1484.005
+    },
+    {
+      "lonDeg": -75.19001249992697,
+      "latDeg": 39.88757965441033,
+      "heightM": 0,
+      "cumulativeDistanceM": 1508.745
+    },
+    {
+      "lonDeg": -75.18963010162481,
+      "latDeg": 39.88757312260812,
+      "heightM": 0,
+      "cumulativeDistanceM": 1541.379
+    },
+    {
+      "lonDeg": -75.18956964158515,
+      "latDeg": 39.8876013001471,
+      "heightM": 0,
+      "cumulativeDistanceM": 1547.415
+    },
+    {
+      "lonDeg": -75.18951773097419,
+      "latDeg": 39.88766245000987,
+      "heightM": 0,
+      "cumulativeDistanceM": 1555.529
+    },
+    {
+      "lonDeg": -75.18948478700109,
+      "latDeg": 39.88804265551303,
+      "heightM": 0,
+      "cumulativeDistanceM": 1597.9
+    },
+    {
+      "lonDeg": -75.1895568420048,
+      "latDeg": 39.8886737032023,
+      "heightM": 0,
+      "cumulativeDistanceM": 1668.338
+    },
+    {
+      "lonDeg": -75.18964307158681,
+      "latDeg": 39.88924104506857,
+      "heightM": 0,
+      "cumulativeDistanceM": 1731.851
+    },
+    {
+      "lonDeg": -75.18839645503297,
+      "latDeg": 39.88935218278901,
+      "heightM": 0,
+      "cumulativeDistanceM": 1838.926
+    },
+    {
+      "lonDeg": -75.18839058220608,
+      "latDeg": 39.88943561888619,
+      "heightM": 0,
+      "cumulativeDistanceM": 1848.217
+    },
+    {
+      "lonDeg": -75.19046806845364,
+      "latDeg": 39.88925508308137,
+      "heightM": 0,
+      "cumulativeDistanceM": 2026.598
+    },
+    {
+      "lonDeg": -75.19126898355462,
+      "latDeg": 39.88919068971588,
+      "heightM": 0,
+      "cumulativeDistanceM": 2095.305
+    },
+    {
+      "lonDeg": -75.19135937212447,
+      "latDeg": 39.889168443679,
+      "heightM": 0,
+      "cumulativeDistanceM": 2103.403
+    },
+    {
+      "lonDeg": -75.19140096569089,
+      "latDeg": 39.88910514624573,
+      "heightM": 0,
+      "cumulativeDistanceM": 2111.286
+    },
+    {
+      "lonDeg": -75.1913981110593,
+      "latDeg": 39.88904765641265,
+      "heightM": 0,
+      "cumulativeDistanceM": 2117.683
+    },
+    {
+      "lonDeg": -75.1912871472216,
+      "latDeg": 39.88840937119218,
+      "heightM": 0,
+      "cumulativeDistanceM": 2189.286
+    },
+    {
+      "lonDeg": -75.19125980986095,
+      "latDeg": 39.88821351963007,
+      "heightM": 0,
+      "cumulativeDistanceM": 2211.188
+    },
+    {
+      "lonDeg": -75.191241619786,
+      "latDeg": 39.88820416833079,
+      "heightM": 0,
+      "cumulativeDistanceM": 2213.056
+    },
+    {
+      "lonDeg": -75.19120624604015,
+      "latDeg": 39.8882128017376,
+      "heightM": 0,
+      "cumulativeDistanceM": 2216.223
+    },
+    {
+      "lonDeg": -75.19093956894916,
+      "latDeg": 39.88852282717533,
+      "heightM": 0,
+      "cumulativeDistanceM": 2257.528
+    },
+    {
+      "lonDeg": -75.19091570032731,
+      "latDeg": 39.88856084219403,
+      "heightM": 0,
+      "cumulativeDistanceM": 2262.22
+    },
+    {
+      "lonDeg": -75.19087000647328,
+      "latDeg": 39.88856174481012,
+      "heightM": 0,
+      "cumulativeDistanceM": 2266.12
+    },
+    {
+      "lonDeg": -75.19084884378118,
+      "latDeg": 39.88854308207321,
+      "heightM": 0,
+      "cumulativeDistanceM": 2268.871
+    },
+    {
+      "lonDeg": -75.19081500587038,
+      "latDeg": 39.88834129341472,
+      "heightM": 0,
+      "cumulativeDistanceM": 2291.494
+    },
+    {
+      "lonDeg": -75.19076849019778,
+      "latDeg": 39.88807036374075,
+      "heightM": 0,
+      "cumulativeDistanceM": 2321.88
+    },
+    {
+      "lonDeg": -75.19073925354931,
+      "latDeg": 39.8878359151937,
+      "heightM": 0,
+      "cumulativeDistanceM": 2348.069
+    },
+    {
+      "lonDeg": -75.1906849301539,
+      "latDeg": 39.88758097011217,
+      "heightM": 0,
+      "cumulativeDistanceM": 2376.794
+    },
+    {
+      "lonDeg": -75.19068022789638,
+      "latDeg": 39.88753396509699,
+      "heightM": 0,
+      "cumulativeDistanceM": 2382.036
+    },
+    {
+      "lonDeg": -75.19067341224184,
+      "latDeg": 39.88729367670442,
+      "heightM": 0,
+      "cumulativeDistanceM": 2408.761
+    },
+    {
+      "lonDeg": -75.19068512819712,
+      "latDeg": 39.88706307280275,
+      "heightM": 0,
+      "cumulativeDistanceM": 2434.423
+    },
+    {
+      "lonDeg": -75.19057407765781,
+      "latDeg": 39.88674734140931,
+      "heightM": 0,
+      "cumulativeDistanceM": 2470.786
+    },
+    {
+      "lonDeg": -75.19057288360962,
+      "latDeg": 39.88659290504335,
+      "heightM": 0,
+      "cumulativeDistanceM": 2487.959
+    },
+    {
+      "lonDeg": -75.19059085926709,
+      "latDeg": 39.88629629792978,
+      "heightM": 0,
+      "cumulativeDistanceM": 2520.976
+    }
+  ]
+}

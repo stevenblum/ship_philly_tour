@@ -210,9 +210,40 @@ button:disabled {
   border-color: #ffcc66;
 }
 
+.camera-copy-button {
+  /* The camera-copy button supports authoring during live navigation while
+     staying above the standard Cesium compass that begins lower on the right. */
+  position: absolute;
+  top: 58px;
+  right: 12px;
+  z-index: 12;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 28, 55, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  color: white;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.camera-copy-button:hover:not(:disabled) {
+  background: rgba(31, 143, 255, 0.92);
+}
+
+.camera-copy-button[data-copy-state="copied"] {
+  border-color: rgba(53, 242, 122, 0.85);
+}
+
+.camera-copy-button[data-copy-state="failed"] {
+  border-color: #ffcc66;
+}
+
 .tour-panel.is-hidden,
 .progress-dots.is-hidden,
-.photorealistic-toggle.is-hidden {
+.photorealistic-toggle.is-hidden,
+.camera-copy-button.is-hidden {
   display: none;
 }
 
@@ -235,6 +266,14 @@ button:disabled {
 
   .photorealistic-toggle {
     top: 10px;
+    right: 10px;
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: 0.78rem;
+  }
+
+  .camera-copy-button {
+    top: 50px;
     right: 10px;
     min-height: 32px;
     padding: 6px 8px;

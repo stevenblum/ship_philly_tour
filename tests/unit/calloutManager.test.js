@@ -200,6 +200,67 @@ describe("point-label callout graphics", () => {
     expect(viewer.entities.remove).not.toHaveBeenCalled();
   });
 
+  test("can hide and restore persistent tour graphics for a full GIS slide", () => {
+    const { addedEntities, viewer } = createFakeViewer();
+    const baseArrow = {
+      id: "flow-test-arrow",
+      type: "curved-arrow-3d",
+      color: "#53d8ff",
+      width: 5,
+      sampleCount: 4,
+      coordinates: [
+        [-75.191, 39.89, 6],
+        [-75.1905, 39.8902, 16],
+        [-75.19, 39.8904, 6],
+      ],
+    };
+    const manager = new CalloutManager(viewer, {
+      baseArrows: [baseArrow],
+      baseCallouts: [callout],
+      flowChevronOptions: { spacingMeters: 1_000_000 },
+    });
+
+    manager.showStopGraphics({
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
+
+    const labelEntity = addedEntities.find((entity) => entity.id === callout.id);
+    const arrowEntity = addedEntities.find((entity) => entity.id === baseArrow.id);
+
+    expect(labelEntity.show).toBe(true);
+    expect(arrowEntity.show).toBeUndefined();
+
+    manager.showStopGraphics({
+      callouts: [],
+      showBaseCallouts: false,
+      showBaseArrows: false,
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
+
+    expect(labelEntity.show).toBe(false);
+    expect(arrowEntity.show).toBe(false);
+
+    manager.refreshSurfaceAnchoredArrows();
+
+    expect(labelEntity.show).toBe(false);
+    expect(arrowEntity.show).toBe(false);
+
+    manager.showStopGraphics({
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    });
+
+    expect(labelEntity.show).toBe(true);
+    expect(arrowEntity.show).toBe(true);
+  });
+
   test("can disable standalone flow chevrons without hiding base arrows", () => {
     const { addedEntities, viewer } = createFakeViewer();
     const baseArrow = {

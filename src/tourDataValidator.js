@@ -129,8 +129,8 @@ function validateAbsolutePoseCamera(camera, path, errors) {
 function validateStopCamera(stop, path, errors) {
   const cameraMode = stop.cameraMode ?? "targetCentered";
 
-  if (!["targetCentered", "absolutePose"].includes(cameraMode)) {
-    errors.push(`${path}.cameraMode must be "targetCentered" or "absolutePose".`);
+  if (!["targetCentered", "absolutePose", "pathFlight"].includes(cameraMode)) {
+    errors.push(`${path}.cameraMode must be "targetCentered", "absolutePose", or "pathFlight".`);
     return;
   }
 
@@ -139,8 +139,55 @@ function validateStopCamera(stop, path, errors) {
     return;
   }
 
+  if (cameraMode === "pathFlight") {
+    validatePathFlight(stop.pathFlight, path, errors);
+    return;
+  }
+
   validateTargetCoordinate(stop.target, `${path}.target`, errors, `${path}.target is required for targetCentered camera mode.`);
   validateTargetView(stop.view, path, errors);
+}
+
+// validatePathFlight checks the hidden KML-derived camera route used by the WIP
+// presentation slide. It intentionally requires a browser-served JSON source.
+function validatePathFlight(pathFlight, path, errors) {
+  if (!pathFlight) {
+    errors.push(`${path}.pathFlight is required for pathFlight camera mode.`);
+    return;
+  }
+
+  if (!pathFlight.source || typeof pathFlight.source !== "string") {
+    errors.push(`${path}.pathFlight.source is required.`);
+  }
+
+  if (!isPositiveFiniteNumber(pathFlight.durationSec)) {
+    errors.push(`${path}.pathFlight.durationSec must be positive.`);
+  }
+
+  if (
+    pathFlight.altitudeOffsetFt !== undefined &&
+    !isPositiveFiniteNumber(pathFlight.altitudeOffsetFt)
+  ) {
+    errors.push(`${path}.pathFlight.altitudeOffsetFt must be positive when provided.`);
+  }
+
+  if (
+    pathFlight.altitudeOffsetM !== undefined &&
+    !isPositiveFiniteNumber(pathFlight.altitudeOffsetM)
+  ) {
+    errors.push(`${path}.pathFlight.altitudeOffsetM must be positive when provided.`);
+  }
+
+  if (
+    pathFlight.lookAheadSec !== undefined &&
+    !isPositiveFiniteNumber(pathFlight.lookAheadSec)
+  ) {
+    errors.push(`${path}.pathFlight.lookAheadSec must be positive when provided.`);
+  }
+
+  if (pathFlight.pitchDeg !== undefined && !isFiniteNumber(pathFlight.pitchDeg)) {
+    errors.push(`${path}.pathFlight.pitchDeg must be a finite number when provided.`);
+  }
 }
 
 // validateArrow ensures curved arrows have enough control points for

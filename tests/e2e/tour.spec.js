@@ -7,6 +7,17 @@ test("tour loads and advances", async ({ page }) => {
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
+  await page.addInitScript(() => {
+    window.__shipyardCopiedCameraText = null;
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text) => {
+          window.__shipyardCopiedCameraText = text;
+        },
+      },
+    });
+  });
 
   await page.goto("/");
 
@@ -21,10 +32,29 @@ test("tour loads and advances", async ({ page }) => {
   const tourPanelBox = await page.locator("#tourPanel").boundingBox();
   const compassBox = await page.locator(".compass").boundingBox();
   const toggleBox = await page.locator("#photorealisticToggle").boundingBox();
+  const copyButtonBox = await page.locator("#cameraViewCopyButton").boundingBox();
   expect((tourPanelBox?.x ?? 0) + (tourPanelBox?.width ?? 0)).toBeLessThan(
     compassBox?.x ?? 0,
   );
   expect(toggleBox?.y ?? 999).toBeLessThan(compassBox?.y ?? 0);
+  expect(copyButtonBox?.y ?? 0).toBeGreaterThan(toggleBox?.y ?? 0);
+  expect(copyButtonBox?.y ?? 999).toBeLessThan(compassBox?.y ?? 0);
+  await expect(
+    page.getByRole("button", { name: "Copy current camera view" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Copy current camera view" }).click();
+  await expect(
+    page.getByRole("button", { name: "Copy current camera view" }),
+  ).toHaveText("Copied");
+  const copiedCameraPayload = await page.evaluate(() =>
+    JSON.parse(window.__shipyardCopiedCameraText),
+  );
+  expect(copiedCameraPayload.type).toBe("ship_philly_tour_camera_view");
+  expect(copiedCameraPayload.camera.destination).toBeTruthy();
+  expect(copiedCameraPayload.camera.orientation).toBeTruthy();
+  expect(copiedCameraPayload.absolutePoseSnippet.cameraMode).toBe(
+    "absolutePose",
+  );
   await expect(page.getByRole("button", { name: /next/i })).toBeVisible();
 
   const firstTitle = await page.locator("#slideTitle").textContent();
@@ -35,13 +65,19 @@ test("tour loads and advances", async ({ page }) => {
   await page.keyboard.press("ArrowLeft");
   await expect(page.locator("#slideTitle")).toHaveText(firstTitle ?? "");
 
-  await expect(page.locator(".progress-dot")).toHaveCount(11);
+  await expect(page.locator(".progress-dot")).toHaveCount(13);
 
   await page.locator(".progress-dot").nth(3).click();
   await expect(page.locator("#slideTitle")).toHaveText(
     "Panel Production Shops",
   );
   await expect(page.locator(".photo-item")).toHaveCount(5);
+
+  await page.locator(".progress-dot").nth(11).click();
+  await expect(page.locator("#slideTitle")).toHaveText("WIP Flight");
+
+  await page.locator(".progress-dot").nth(12).click();
+  await expect(page.locator("#slideTitle")).toHaveText("MES Network");
   expect(consoleErrors).toEqual([]);
 });
 

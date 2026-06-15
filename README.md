@@ -48,6 +48,8 @@ setting.
 ```bash
 npm run dev
 npm run dev:demo
+npm run data:shipyard
+npm run data:wip-tour
 npm run build
 npm run build:github
 npm run preview
@@ -111,6 +113,22 @@ The Cesium viewer initializes `cesium-navigation-es6` with its standard compass,
 
 The original KML source is preserved as `Phillly Tour.kml` and normalized for app use at `public/data/philly-tour.kml`. The initial structured data lives in `src/shipyardLocations.js`, and the narrated tour sequence lives in `src/tourStops.js`.
 
+The full manufacturing-equipment, storage-area, shop-boundary, process-edge, and roads overlay uses `Philly_Shipyard.gpkg` as the canonical GIS source. Run this after updating the GeoPackage:
+
+```bash
+npm run data:shipyard
+```
+
+That command regenerates `public/data/shipyard-gis/points.geojson`, `lines.geojson`, `polygons.geojson`, `styles.json`, and `manifest.json`. The generated files are committed so GitHub Pages can serve them as static assets without GDAL. The final tour slide loads those GeoJSON files with Cesium and applies QGIS-derived styles by `styleClass`.
+
+The WIP flight slide uses `WIP_Tour.kml` as its source. That file contains older shop point placemarks that the app ignores; only the placemark named `WIP Tour` is converted:
+
+```bash
+npm run data:wip-tour
+```
+
+That command regenerates `public/data/wip-tour-path.json`. The WIP Flight slide uses the generated line as a hidden one-minute camera path 15 m above the sampled Cesium surface, with the camera pitched down 15 degrees; the route line itself is not drawn.
+
 Tour stops should use `cameraMode: "targetCentered"` by default. In that mode, `target.lonDeg`, `target.latDeg`, and `target.heightM` define what stays centered, while `view.headingDeg`, `view.pitchDeg`, and `view.rangeM` define the camera offset around that target. Use `cameraMode: "absolutePose"` only for special shots where the exact camera location matters.
 
 Shop point-label callouts are authored at `height: 0` when possible and clamped to the rendered surface. In lightweight mode they sit on the globe/terrain surface; in photorealistic demo mode Cesium clamps them to the Google Photorealistic 3D Tiles surface when the tileset is loaded with collision enabled. Production-flow arrow endpoints resample the rendered surface at their start and end shop labels so the arrows can meet roof-height or ground-height nodes after the Google tiles refine.
@@ -121,13 +139,15 @@ The blue production-flow arrows also stay visible throughout the tour. They reso
 
 Repeated chevrons are rendered by `src/flowChevronLayer.js` as a standalone billboard overlay on those same sampled arrow paths. They are spaced from sampled Cesium path length at roughly one chevron every 6 yards, so longer arrows automatically get more chevrons and shorter arrows get fewer. They are enabled by default for clearer flow direction, active routes turn green with a subtle wave effect, and the layer can be disabled with `VITE_ENABLE_FLOW_CHEVRONS=false` or `?chevrons=false`.
 
-The current presentation sequence is: Shipyard Overview, Steel Storage Yard, Cutting Shop, Panel Production Shops, Section Assembly Shop, Outfitting Shop, Block Assembly Shop, Painting Shop, Grand Block Assembly Area, Building Dock, and Outfitting Dock. The Panel Production Shops stop shows Web Shop, Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop together.
+The current presentation sequence is: Shipyard Overview, Steel Storage Yard, Cutting Shop, Panel Production Shops, Section Assembly Shop, Outfitting Shop, Block Assembly Shop, Painting Shop, Grand Block Assembly Area, Building Dock, Outfitting Dock, WIP Flight, and MES Network. The Panel Production Shops stop shows Web Shop, Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop together. The WIP Flight stop hides ordinary production-flow graphics and runs the hidden camera path; the final MES Network stop hides the ordinary production-flow arrows and shows the generated GIS overlay.
 
 To add locations, add placemarks to the KML, then add corresponding structured records and tests. Preserve source placemark ids and names; add separate display labels when a source typo needs a curated label.
 
 ## Authoring
 
 When `VITE_ENABLE_AUTHORING=true`, clicking in the Cesium scene logs a copy-ready stop template through `src/logger.js`. Use those values to refine cameras, labels, polygons, and curved arrows.
+
+The upper-right **Copy Camera** button is always visible during normal presentation mode. It copies the current camera view directly to the clipboard as JSON, including an exact `absolutePose` snippet and a target-centered approximation when Cesium can pick the center of the screen. The camera data is not displayed in the UI.
 
 ## Testing
 

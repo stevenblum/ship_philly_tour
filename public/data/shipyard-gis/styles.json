@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "sourceStyle": "qgis-rule-renderer",
+  "classes": {
+    "polygon_9ad46f0a": {
+      "label": "Steelyard/storage boundary purple",
+      "geometryType": "Polygon",
+      "qgisSymbol": "0",
+      "qgisSymbolType": "fill",
+      "fillEnabled": true,
+      "fillColor": {
+        "rgba": [
+          255,
+          255,
+          255,
+          46
+        ],
+        "css": "rgba(255, 255, 255, 0.1804)"
+      },
+      "outlineColor": {
+        "rgba": [
+          123,
+          31,
+          162,
+          255
+        ],
+        "css": "rgba(123, 31, 162, 1)"
+      },
+      "outlineWidthPx": 2
+    },
+    "polygon_3a76f57d": {
+      "label": "gantry boundary cyan",
+      "geometryType": "Polygon",
+      "qgisSymbol": "1",
+      "qgisSymbolType": "fill",
+      "fillEnabled": false,
+      "fillColor": {
+        "rgba": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "css": "rgba(0, 0, 255, 1)"
+      },
+      "outlineColor": {
+        "rgba": [
+          0,
+          188,
+          212,
+          255
+        ],
+        "css": "rgba(0, 188, 212, 1)"
+      },
+      "outlineWidthPx": 1
+    },
+    "polygon_6bef2db3": {
+      "label": "shop/storage boundary yellow",
+      "geometryType": "Polygon",
+      "qgisSymbol": "2",
+      "qgisSymbolType": "fill",
+      "fillEnabled": true,
+      "fillColor": {
+        "rgba": [
+          255,
+          255,
+          255,
+          46
+        ],
+        "css": "rgba(255, 255, 255, 0.1804)"
+      },
+      "outlineColor": {
+        "rgba": [
+          251,
+          192,
+          45,
+          255
+        ],
+        "css": "rgba(251, 192, 45, 1)"
+      },
+      "outlineWidthPx": 2
+    },
+    "linestring_49311890": {
+      "label": "road / fixed transfer green",
+      "geometryType": "Line",
+      "qgisSymbol": "3",
+      "qgisSymbolType": "line",
+      "strokeColor": {
+        "rgba": [
+          102,
+          187,
+          106,
+          255
+        ],
+        "css": "rgba(102, 187, 106, 1)"
+      },
+      "strokeWidthPx": 3
+    },
+    "linestring_cf53965d": {
+      "label": "road yellow",
+      "geometryType": "Line",
+      "qgisSymbol": "4",
+      "qgisSymbolType": "line",
+      "strokeColor": {
+        "rgba": [
+          251,
+          192,
+          45,
+          255
+        ],
+        "css": "rgba(251, 192, 45, 1)"
+      },
+      "strokeWidthPx": 3
+    },
+    "linestring_17c29e63": {
+      "label": "approach teal",
+      "geometryType": "Line",
+      "qgisSymbol": "5",
+      "qgisSymbolType": "line",
+      "strokeColor": {
+        "rgba": [
+          0,
+          121,
+          107,
+          255
+        ],
+        "css": "rgba(0, 121, 107, 1)"
+      },
+      "strokeWidthPx": 3
+    },
+    "linestring_8108fd7c": {
+      "label": "process edge - gantry crane",
+      "geometryType": "Line",
+      "qgisSymbol": "6",
+      "qgisSymbolType": "line",
+      "strokeColor": {
+        "rgba": [
+          249,
+          115,
+          22,
+          255
+        ],
+        "css": "rgba(249, 115, 22, 1)"
+      },
+      "strokeWidthPx": 2
+    },
+    "linestring_7848c9c3": {
+      "label": "process edge - line transfer",
+      "geometryType": "Line",
+      "qgisSymbol": "7",
+      "qgisSymbolType": "line",
+      "strokeColor": {
+        "rgba": [
+          124,
+          58,
+          237,
+          255
+        ],
+        "css": "rgba(124, 58, 237, 1)"
+      },
+      "strokeWidthPx": 2
+    },
+    "point_da190ade": {
+      "label": "area point",
+      "geometryType": "Point",
+      "qgisSymbol": "8",
+      "qgisSymbolType": "marker",
+      "pointColor": {
+        "rgba": [
+          250,
+          204,
+          21,
+          255
+        ],
+        "css": "rgba(250, 204, 21, 1)"
+      },
+      "outlineColor": {
+        "rgba": [
+          17,
+          24,
+          39,
+          255
+        ],
+        "css": "rgba(17, 24, 39, 1)"
+      },
+      "outlineWidthPx": 1,
+      "pointSizePx": 9
+    },
+    "point_6cecac05": {
+      "label": "delivery / pickup station",
+      "geometryType": "Point",
+      "qgisSymbol": "9",
+      "qgisSymbolType": "marker",
+      "pointColor": {
+        "rgba": [
+          220,
+          38,
+          38,
+          255
+        ],
+        "css": "rgba(220, 38, 38, 1)"
+      },
+      "outlineColor": {
+        "rgba": [
+          17,
+          24,
+          39,
+          255
+        ],
+        "css": "rgba(17, 24, 39, 1)"
+      },
+      "outlineWidthPx": 1,
+      "pointSizePx": 10
+    },
+    "point_35112ad1": {
+      "label": "queue station",
+      "geometryType": "Point",
+      "qgisSymbol": "10",
+      "qgisSymbolType": "marker",
+      "pointColor": {
+        "rgba": [
+          22,
+          163,
+          74,
+          255
+        ],
+        "css": "rgba(22, 163, 74, 1)"
+      },
+      "outlineColor": {
+        "rgba": [
+          17,
+          24,
+          39,
+          255
+        ],
+        "css": "rgba(17, 24, 39, 1)"
+      },
+      "outlineWidthPx": 1,
+      "pointSizePx": 10
+    },
+    "point_bf653fe1": {
+      "label": "work station",
+      "geometryType": "Point",
+      "qgisSymbol": "11",
+      "qgisSymbolType": "marker",
+      "pointColor": {
+        "rgba": [
+          249,
+          115,
+          22,
+          255
+        ],
+        "css": "rgba(249, 115, 22, 1)"
+      },
+      "outlineColor": {
+        "rgba": [
+          17,
+          24,
+          39,
+          255
+        ],
+        "css": "rgba(17, 24, 39, 1)"
+      },
+      "outlineWidthPx": 1,
+      "pointSizePx": 9
+    }
+  }
+}

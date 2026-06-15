@@ -129,6 +129,8 @@ describe("tour data validation", () => {
       "Grand Block Assembly Area",
       "Building Dock",
       "Outfitting Dock",
+      "WIP Flight",
+      "MES Network",
     ]);
     expect(tourStops[0].stats).toEqual([]);
     expect(tourStops[3].photos).toHaveLength(5);
@@ -141,13 +143,17 @@ describe("tour data validation", () => {
     ]);
   });
 
-  test("uses the published-layout camera heading for every current stop", () => {
-    const modes = tourStops.map((stop) => stop.cameraMode);
-    const headings = tourStops.map((stop) => stop.view.headingDeg);
+  test("uses the published-layout camera heading for authored stops", () => {
+    const authoredCameraStops = tourStops.filter(
+      (stop) => stop.cameraMode !== "pathFlight",
+    );
+    const headings = authoredCameraStops.map((stop) => stop.view.headingDeg);
 
-    expect(new Set(modes)).toEqual(new Set(["targetCentered"]));
-    expect(new Set(headings)).toEqual(
-      new Set([DEFAULT_SHIPYARD_HEADING_DEGREES]),
+    expect(new Set(tourStops.map((stop) => stop.cameraMode))).toEqual(
+      new Set(["targetCentered", "pathFlight"]),
+    );
+    expect(headings.every((heading) => heading > 84 && heading < 86)).toBe(
+      true,
     );
   });
 
@@ -323,6 +329,10 @@ describe("tour data validation", () => {
     expect(activeIdsByStop.get("outfitting-dock")).toEqual([
       "outfitting-dock-label",
     ]);
+    expect(activeIdsByStop.get("wip-flight")).toEqual([]);
+    expect(activeIdsByStop.get("manufacturing-equipment-and-roads")).toEqual(
+      [],
+    );
     expect(activeIdsByStop.get("panel-production")).toEqual([
       "web-shop-label",
       "large-panel-line-label",
@@ -374,6 +384,48 @@ describe("tour data validation", () => {
     expect(activeArrowsByStop.get("outfitting-dock")).toEqual([
       "flow-building-dock-to-outfitting-dock",
     ]);
+    expect(activeArrowsByStop.get("wip-flight")).toEqual([]);
+    expect(
+      activeArrowsByStop.get("manufacturing-equipment-and-roads"),
+    ).toEqual([]);
+  });
+
+  test("adds the WIP Flight path slide immediately before MES Network", () => {
+    const wipStop = tourStops.at(-2);
+    const finalStop = tourStops.at(-1);
+
+    expect(wipStop.id).toBe("wip-flight");
+    expect(wipStop.title).toBe("WIP Flight");
+    expect(wipStop.cameraMode).toBe("pathFlight");
+    expect(wipStop.pathFlight).toEqual({
+      source: "data/wip-tour-path.json",
+      durationSec: 60,
+      altitudeOffsetM: 15,
+      lookAheadSec: 1.5,
+      pitchDeg: -15,
+    });
+    expect(wipStop.showBaseCallouts).toBe(false);
+    expect(wipStop.showBaseArrows).toBe(false);
+    expect(finalStop.title).toBe("MES Network");
+  });
+
+  test("adds a final full GIS overlay slide after the production-flow sequence", () => {
+    const finalStop = tourStops.at(-1);
+
+    expect(finalStop.id).toBe("manufacturing-equipment-and-roads");
+    expect(finalStop.title).toBe("MES Network");
+    expect(finalStop.gisOverlay).toEqual({ show: true });
+    expect(finalStop.showBaseCallouts).toBe(false);
+    expect(finalStop.showBaseArrows).toBe(false);
+    expect(finalStop.cameraMode).toBe("targetCentered");
+    expect(finalStop.target.lonDeg).toBeCloseTo(-75.19040073);
+    expect(finalStop.target.latDeg).toBeCloseTo(39.88899696);
+    expect(finalStop.target.heightM).toBeCloseTo(-0.116);
+    expect(finalStop.target.radiusM).toBe(520);
+    expect(finalStop.view.headingDeg).toBeCloseTo(84.993007);
+    expect(finalStop.view.pitchDeg).toBeCloseTo(-50.008353);
+    expect(finalStop.view.rangeM).toBeCloseTo(767.741);
+    expect(finalStop.view.durationSec).toBe(4);
   });
 
   test("uses the curated Cutting Area point for the Cutting Shop stop", () => {
@@ -430,6 +482,45 @@ describe("tour data validation", () => {
       true,
     );
     expect(errors.some((error) => error.includes(".view is required"))).toBe(
+      true,
+    );
+  });
+
+  test("rejects malformed pathFlight stops", () => {
+    const invalidPathFlightStop = {
+      ...tourStops[0],
+      id: "bad-path-flight",
+      cameraMode: "pathFlight",
+      pathFlight: {
+        source: "",
+        durationSec: 0,
+        altitudeOffsetFt: -1,
+        altitudeOffsetM: -1,
+        lookAheadSec: 0,
+        pitchDeg: Number.NaN,
+      },
+    };
+    delete invalidPathFlightStop.target;
+    delete invalidPathFlightStop.view;
+
+    const errors = validateTourStops([invalidPathFlightStop]);
+
+    expect(errors.some((error) => error.includes("pathFlight.source"))).toBe(
+      true,
+    );
+    expect(
+      errors.some((error) => error.includes("pathFlight.durationSec")),
+    ).toBe(true);
+    expect(
+      errors.some((error) => error.includes("pathFlight.altitudeOffsetFt")),
+    ).toBe(true);
+    expect(
+      errors.some((error) => error.includes("pathFlight.altitudeOffsetM")),
+    ).toBe(true);
+    expect(
+      errors.some((error) => error.includes("pathFlight.lookAheadSec")),
+    ).toBe(true);
+    expect(errors.some((error) => error.includes("pathFlight.pitchDeg"))).toBe(
       true,
     );
   });

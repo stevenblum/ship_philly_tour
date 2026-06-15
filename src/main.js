@@ -1,12 +1,15 @@
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import "./style.css";
 import { logger } from "./logger.js";
+import { initializeCameraViewCopyButton } from "./cameraViewClipboard.js";
 import { resolveFlowChevronEnabled } from "./flowChevronLayer.js";
 import { initializePhotorealisticToggle } from "./photorealisticToggle.js";
 import { setupScene } from "./sceneSetup.js";
 import { formatSceneModeStatus } from "./sceneMode.js";
 import { shipyardLocations, toPointLabel } from "./shipyardLocations.js";
 import { processFlowArrows, tourStops } from "./tourStops.js";
+import { ShipyardGisLayer } from "./shipyardGisLayer.js";
+import { WipFlightController } from "./wipFlightController.js";
 import {
   validateShipyardLocations,
   validateTourStops,
@@ -69,12 +72,19 @@ async function bootstrap() {
   const { viewer, sceneStatus } = await setupScene("cesiumContainer");
   updateSceneStatus(sceneStatus);
   const baseCallouts = buildPersistentCallouts(shipyardLocations, tourStops);
+  const shipyardGisLayer = new ShipyardGisLayer(viewer);
+  const wipFlightController = new WipFlightController(viewer);
   const tourManager = new TourManager(viewer, tourStops, {
     baseArrows: processFlowArrows,
     baseCallouts,
     enableFlowChevrons: resolveFlowChevronEnabled(),
+    shipyardGisLayer,
+    wipFlightController,
   });
   tourManager.initialize();
+  initializeCameraViewCopyButton(viewer, {
+    getCurrentStopSnapshot: () => tourManager.getCurrentStopSnapshot(),
+  });
   tourManager.refreshSurfaceAnchoredGraphics({
     repeat: sceneStatus.photorealisticEnabled,
   });

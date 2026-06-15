@@ -11,13 +11,13 @@ const LIGHTWEIGHT_IMAGERY_URL =
 
 // createLightweightBaseLayer provides the minimum expected visual context for
 // development mode: satellite/aerial imagery without Google Photorealistic 3D
-// Tiles. Dynamic image export avoids tile-specific CORS/missing-tile failures
-// that can appear when close target-centered views request cached tiles.
+// Tiles. Cached ArcGIS tiles are more reliable for the low-altitude WIP flight
+// than dynamic image export, which can reject very small close-range extents.
 function createLightweightBaseLayer() {
   return Cesium.ImageryLayer.fromProviderAsync(
     Cesium.ArcGisMapServerImageryProvider.fromUrl(LIGHTWEIGHT_IMAGERY_URL, {
       enablePickFeatures: false,
-      usePreCachedTilesIfAvailable: false,
+      usePreCachedTilesIfAvailable: true,
     }),
   );
 }
