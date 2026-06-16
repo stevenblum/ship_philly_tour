@@ -2,6 +2,7 @@ import { flyToStopCamera, setViewForStop } from "./cameraUtils.js";
 import { CalloutManager } from "./calloutManager.js";
 import { logger } from "./logger.js";
 import { PhotoLightbox } from "./photoLightbox.js";
+import { buildPublicAssetUrl } from "./publicAssetUrl.js";
 
 const SURFACE_REFRESH_DELAYS_MS = [0, 250, 750, 1500, 3000, 5000];
 
@@ -311,8 +312,9 @@ export class TourManager {
       const img = document.createElement("img");
       const trigger = document.createElement("button");
       const label = photo.label ?? stop.title;
+      const photoUrl = buildPublicAssetUrl(photo.src);
 
-      img.src = photo.src;
+      img.src = photoUrl;
       img.alt = label;
       img.addEventListener("error", () => {
         const fallback = document.createElement("div");
@@ -327,7 +329,7 @@ export class TourManager {
       trigger.addEventListener("click", () => {
         this.photoLightbox?.open?.({
           title: stop.title,
-          src: photo.src,
+          src: photoUrl,
           alt: label,
           caption: label,
         });

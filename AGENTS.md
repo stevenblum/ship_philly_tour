@@ -23,6 +23,7 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 - `src/sceneSetup.js`: Cesium viewer creation, standard `cesium-navigation-es6` compass/navigation widget setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, default-globe fallback.
 - `src/photorealisticToggle.js`: upper-right presentation checkbox for enabling/disabling Google Photorealistic 3D Tiles at runtime.
 - `src/photoLightbox.js`: reusable full-screen image expansion overlay for tour photos.
+- `src/publicAssetUrl.js`: base-path-aware public asset URL helper for photos, layout images, and GitHub Pages project-site deployment.
 - `src/shipyardLocations.js`: structured KML-derived shop and yard placemarks.
 - `public/data/philly-tour.kml`: canonical browser-accessible KML source copy.
 - `src/tourStops.js`: narrated tour sequence and slide-specific graphics.

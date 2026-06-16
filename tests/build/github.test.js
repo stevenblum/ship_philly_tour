@@ -22,6 +22,9 @@ describe("GitHub Pages build output", () => {
     expect(existsSync(join(distDir, "cesiumStatic", "ThirdParty"))).toBe(true);
     expect(existsSync(join(distDir, "cesiumStatic", "Assets"))).toBe(true);
     expect(existsSync(join(distDir, "cesiumStatic", "Widgets"))).toBe(true);
+    expect(existsSync(join(distDir, "photos", "philly-large-panel.jpg"))).toBe(
+      true,
+    );
   });
 
   test("uses GitHub Pages app and Cesium base URLs", () => {

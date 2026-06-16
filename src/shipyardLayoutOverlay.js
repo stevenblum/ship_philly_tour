@@ -1,44 +1,18 @@
 import * as Cesium from "cesium";
-import { normalizeBasePath } from "./basePath.js";
 import { logger } from "./logger.js";
+import { buildPublicAssetUrl } from "./publicAssetUrl.js";
+
+export { buildPublicAssetUrl } from "./publicAssetUrl.js";
 
 const DEFAULT_LAYOUT_REGISTRATION_SOURCE =
   "data/shipyard-layout-registration.json";
 const DEFAULT_FADE_DURATION_SEC = 1.5;
 
-// readRuntimeBasePath mirrors the GIS and WIP path helpers so the layout image
-// and registration JSON resolve in local root hosting and GitHub Pages builds.
-function readRuntimeBasePath() {
-  if (typeof import.meta !== "undefined" && import.meta.env) {
-    return import.meta.env.BASE_URL ?? import.meta.env.VITE_APP_BASE_PATH ?? "/";
-  }
-
-  if (typeof process !== "undefined" && process.env) {
-    return process.env.VITE_APP_BASE_PATH ?? "/";
-  }
-
-  return "/";
-}
-
-// buildPublicAssetUrl converts public/ asset paths into runtime URLs without
-// forcing callers to care whether the app is served from "/" or a project path.
-export function buildPublicAssetUrl(
-  source,
-  basePath = readRuntimeBasePath(),
-) {
-  if (!source || /^(https?:|data:|blob:)/i.test(source)) return source;
-
-  const normalizedBasePath = normalizeBasePath(basePath);
-  const normalizedSource = source.startsWith("/") ? source.slice(1) : source;
-
-  return `${normalizedBasePath}${normalizedSource}`;
-}
-
 // buildShipyardLayoutRegistrationUrl keeps the JSON fetch path compatible with
 // Vite's base path and with hand-authored absolute URLs used in tests.
 export function buildShipyardLayoutRegistrationUrl(
   source = DEFAULT_LAYOUT_REGISTRATION_SOURCE,
-  basePath = readRuntimeBasePath(),
+  basePath,
 ) {
   return buildPublicAssetUrl(source, basePath);
 }
@@ -132,7 +106,7 @@ function createLayoutPrimitive(registration, options = {}) {
   const geometryData = buildLayoutGeometryData(registration);
   const imageUrl = buildPublicAssetUrl(
     registration.image?.src,
-    options.basePath ?? readRuntimeBasePath(),
+    options.basePath,
   );
   const geometry = new Cesium.Geometry({
     attributes: new Cesium.GeometryAttributes({
@@ -221,7 +195,7 @@ function defaultCancelFrame(frameId) {
 export class ShipyardLayoutOverlay {
   constructor(viewer, options = {}) {
     this.viewer = viewer;
-    this.basePath = options.basePath ?? readRuntimeBasePath();
+    this.basePath = options.basePath;
     this.fetchJson =
       options.fetchJson ??
       (async (url) => {

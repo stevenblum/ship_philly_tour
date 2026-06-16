@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { buildPublicAssetUrl } from "../../src/publicAssetUrl.js";
 import { TourManager } from "../../src/tourManager.js";
 
 const stops = [
@@ -171,6 +172,21 @@ describe("TourManager navigation", () => {
       alt: "Real Shop",
       caption: "Real Shop",
     });
+  });
+
+  test("resolves public photo URLs for GitHub Pages project-site builds", () => {
+    expect(
+      buildPublicAssetUrl("/photos/real-shop.jpg", "/ship_philly_tour/"),
+    ).toBe("/ship_philly_tour/photos/real-shop.jpg");
+    expect(buildPublicAssetUrl("photos/real-shop.jpg", "/")).toBe(
+      "/photos/real-shop.jpg",
+    );
+    expect(
+      buildPublicAssetUrl(
+        "https://example.com/photos/real-shop.jpg",
+        "/ship_philly_tour/",
+      ),
+    ).toBe("https://example.com/photos/real-shop.jpg");
   });
 
   test("closes expanded photos when navigating between slides", () => {
