@@ -5,6 +5,7 @@ import {
 } from "./arrowControlOffset.js";
 import { FlowChevronLayer } from "./flowChevronLayer.js";
 import { logger } from "./logger.js";
+import { scaleShipGraphVisual } from "./visualScale.js";
 
 // sampleCurvedArrowPositions turns author-friendly control points into the
 // dense line strip Cesium needs to render a smooth 3D directional arrow.
@@ -41,15 +42,16 @@ export function sampleCurvedArrowPositions(arrow) {
 export function buildCurvedArrowPolylineConfig(arrow, options = {}) {
   const active = options.active ?? false;
   const inactiveWidth = arrow.width ?? 7;
+  const activeWidth = arrow.activeWidth ?? Math.max(inactiveWidth + 2, 7);
   const color = Cesium.Color.fromCssColorString(
     active ? (arrow.activeColor ?? "#35f27a") : (arrow.color ?? "#53d8ff"),
   );
 
   return {
     positions: sampleCurvedArrowPositions(arrow),
-    width: active
-      ? (arrow.activeWidth ?? Math.max(inactiveWidth + 2, 7))
-      : inactiveWidth,
+    // Scale only the rendered line width. Authored arrow widths remain stable
+    // route metadata while the presentation can enlarge the visible graph.
+    width: scaleShipGraphVisual(active ? activeWidth : inactiveWidth),
     material: new Cesium.PolylineArrowMaterialProperty(color),
     arcType: Cesium.ArcType.NONE,
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -164,6 +166,10 @@ export function resolveSurfaceAnchoredCoordinate(
 function buildPointLabelStyle(callout, active = false) {
   const activeColor = callout.activeColor ?? "#35f27a";
   const inactiveColor = callout.color ?? "#53d8ff";
+  const pointSize = active
+    ? (callout.activePixelSize ?? 17)
+    : (callout.pixelSize ?? 10);
+  const fontSize = active ? 17 : 15;
 
   return {
     pointColor: Cesium.Color.fromCssColorString(
@@ -172,10 +178,13 @@ function buildPointLabelStyle(callout, active = false) {
     labelColor: active
       ? Cesium.Color.fromCssColorString(activeColor)
       : Cesium.Color.WHITE,
-    pointSize: active
-      ? (callout.activePixelSize ?? 17)
-      : (callout.pixelSize ?? 10),
-    font: active ? "bold 17px sans-serif" : "15px sans-serif",
+    pointSize: scaleShipGraphVisual(pointSize),
+    pointOutlineWidth: scaleShipGraphVisual(2),
+    labelOutlineWidth: scaleShipGraphVisual(3),
+    labelPixelOffset: -scaleShipGraphVisual(18),
+    font: active
+      ? `bold ${scaleShipGraphVisual(fontSize)}px sans-serif`
+      : `${scaleShipGraphVisual(fontSize)}px sans-serif`,
   };
 }
 
@@ -198,7 +207,7 @@ export function buildPointLabelEntityConfig(callout, options = {}) {
       pixelSize: style.pointSize,
       color: style.pointColor,
       outlineColor: Cesium.Color.WHITE,
-      outlineWidth: 2,
+      outlineWidth: style.pointOutlineWidth,
       heightReference,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
@@ -207,10 +216,10 @@ export function buildPointLabelEntityConfig(callout, options = {}) {
       font: style.font,
       fillColor: style.labelColor,
       outlineColor: Cesium.Color.BLACK,
-      outlineWidth: 3,
+      outlineWidth: style.labelOutlineWidth,
       style: Cesium.LabelStyle.FILL_AND_OUTLINE,
       verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-      pixelOffset: new Cesium.Cartesian2(0, -18),
+      pixelOffset: new Cesium.Cartesian2(0, style.labelPixelOffset),
       heightReference,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
@@ -353,8 +362,14 @@ export class CalloutManager {
 
     entityRecord.entity.point.pixelSize = style.pointSize;
     entityRecord.entity.point.color = style.pointColor;
+    entityRecord.entity.point.outlineWidth = style.pointOutlineWidth;
     entityRecord.entity.label.font = style.font;
     entityRecord.entity.label.fillColor = style.labelColor;
+    entityRecord.entity.label.outlineWidth = style.labelOutlineWidth;
+    entityRecord.entity.label.pixelOffset = new Cesium.Cartesian2(
+      0,
+      style.labelPixelOffset,
+    );
   }
 
   // updatePointLabelStates turns only explicit active labels green, larger, and

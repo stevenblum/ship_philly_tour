@@ -38,6 +38,7 @@ Can you provide a good working definition of an MES that I can use in slide 1 pl
 * Building Dock
 * Outfitting Dock
 
+
 # WIP Flight
 I've added a new kml file to the project called "WIP_tour.kml". This file contains old shop location placemarks, so DO NOT USE THEM. But the kml file also contains a new `WIP Tour` poly line. I want to introduce this poly line as a fly through path for a "presentation" in the cesium app. I want this to be the second to last slide, just before the full graph slide. I want the "slide" to follow the path of the polyline, at 10 ft above the surface of whatever terrain is currently shown; so that would end up being a fixed distance above a flat satellite image. I would like the full flight to take about 1 minute. You will need to convert the polyline into a SampledPositionProperty, and then createa moving entity that follows the path, and attached the camera. Do not draw the polyline itself anywhere in the app, just use it as a path for the camera to follow. The camera should be looking forward along the path, and should maintain a constant altitude of 10 ft above the surface. The flight should start at the beginning of the polyline and end at the end of the polyline, taking approximately 1 minute to complete. To make the camera movement smooth, please implement hermite spline interpolation. here are some examples of how to impelemnt, but please develop a more effective implementation that is tailored to our specific implementation:
 

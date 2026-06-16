@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "source": {
+    "file": "WIP_Tour.kml",
+    "acceptedSectionAnchorNames": [
+      "Section_Assembly_NE_Corner",
+      "Secetion_Assembly_NE_Corner"
+    ],
+    "anchors": {
+      "sectionAssemblyNE": {
+        "id": "sectionAssemblyNE",
+        "canonicalName": "Section_Assembly_NE_Corner",
+        "matchedName": "Secetion_Assembly_NE_Corner",
+        "pixel": {
+          "x": 1445,
+          "y": 659
+        },
+        "coordinate": {
+          "lonDeg": -75.18843789097875,
+          "latDeg": 39.89099322621952,
+          "heightM": 2.80704959476294
+        }
+      },
+      "buildingDockSW": {
+        "id": "buildingDockSW",
+        "canonicalName": "Building_Dock_SW_Corner",
+        "matchedName": "Building_Dock_SW_Corner",
+        "pixel": {
+          "x": 3181,
+          "y": 1373
+        },
+        "coordinate": {
+          "lonDeg": -75.19067606725726,
+          "latDeg": 39.88496200293871,
+          "heightM": 1.533194973665044
+        }
+      }
+    }
+  },
+  "image": {
+    "src": "/photos/philly-shipyard-layout.png",
+    "widthPx": 3359,
+    "heightPx": 2106
+  },
+  "transform": {
+    "scaleMPerPixel": 0.371476715837,
+    "rotationRad": -1.457985352017,
+    "imageRightHeadingDeg": 173.536407262463,
+    "imageTopHeadingDeg": 83.536407262463,
+    "widthM": 1247.790288496735,
+    "heightM": 782.32996355288,
+    "diagonalM": 1472.759578457874,
+    "groundDistanceM": 697.297715331735,
+    "pixelDistance": 1877.096694366063,
+    "surfaceHeightM": 6
+  },
+  "corners": [
+    {
+      "id": "topLeft",
+      "pixel": {
+        "x": 0,
+        "y": 0
+      },
+      "coordinate": {
+        "lonDeg": -75.186295034981,
+        "latDeg": 39.896037781945,
+        "heightM": 6
+      }
+    },
+    {
+      "id": "topRight",
+      "pixel": {
+        "x": 3359,
+        "y": 0
+      },
+      "coordinate": {
+        "lonDeg": -75.184648617807,
+        "latDeg": 39.884887479108,
+        "heightM": 6
+      }
+    },
+    {
+      "id": "bottomRight",
+      "pixel": {
+        "x": 3359,
+        "y": 2106
+      },
+      "coordinate": {
+        "lonDeg": -75.193760101144,
+        "latDeg": 39.884095462677,
+        "heightM": 6
+      }
+    },
+    {
+      "id": "bottomLeft",
+      "pixel": {
+        "x": 0,
+        "y": 2106
+      },
+      "coordinate": {
+        "lonDeg": -75.195406518317,
+        "latDeg": 39.895245765515,
+        "heightM": 6
+      }
+    }
+  ],
+  "center": {
+    "lonDeg": -75.190027568062,
+    "latDeg": 39.890066622311,
+    "heightM": 6
+  },
+  "camera": {
+    "lonDeg": -75.190027568062,
+    "latDeg": 39.890066622311,
+    "heightM": 1472.759578,
+    "headingDeg": 83.536407262463,
+    "pitchDeg": -90,
+    "rollDeg": 0,
+    "durationSec": 3
+  }
+}

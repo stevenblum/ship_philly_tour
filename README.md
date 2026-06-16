@@ -48,6 +48,7 @@ setting.
 ```bash
 npm run dev
 npm run dev:demo
+npm run data:layout
 npm run data:shipyard
 npm run data:wip-tour
 npm run build
@@ -113,6 +114,14 @@ The Cesium viewer initializes `cesium-navigation-es6` with its standard compass,
 
 The original KML source is preserved as `Phillly Tour.kml` and normalized for app use at `public/data/philly-tour.kml`. The initial structured data lives in `src/shipyardLocations.js`, and the narrated tour sequence lives in `src/tourStops.js`.
 
+Slide 0 uses `public/photos/philly-shipyard-layout.png` as a georeferenced, flat Cesium surface aligned from two reference placemarks in `WIP_Tour.kml`: `Section_Assembly_NE_Corner` and `Building_Dock_SW_Corner`. The converter also accepts the current KML typo `Secetion_Assembly_NE_Corner`. Run this after changing the layout image anchors or replacing the layout image:
+
+```bash
+npm run data:layout
+```
+
+That command regenerates `public/data/shipyard-layout-registration.json`. The app opens on slide 1, `Shipyard Overview`; pressing Back shows slide 0, `Shipyard Layout`. The transition uses a 1.5 second fade: the layout image fades in as an opaque overlay on top of the live satellite imagery or Google Photorealistic 3D Tiles scene. The underlying imagery and tiles stay visible and loaded, so returning to the overview does not reveal a star-only background or require a cold reload.
+
 The full manufacturing-equipment, storage-area, shop-boundary, process-edge, and roads overlay uses `Philly_Shipyard.gpkg` as the canonical GIS source. Run this after updating the GeoPackage:
 
 ```bash
@@ -139,7 +148,7 @@ The blue production-flow arrows also stay visible throughout the tour. They reso
 
 Repeated chevrons are rendered by `src/flowChevronLayer.js` as a standalone billboard overlay on those same sampled arrow paths. They are spaced from sampled Cesium path length at roughly one chevron every 6 yards, so longer arrows automatically get more chevrons and shorter arrows get fewer. They are enabled by default for clearer flow direction, active routes turn green with a subtle wave effect, and the layer can be disabled with `VITE_ENABLE_FLOW_CHEVRONS=false` or `?chevrons=false`.
 
-The current presentation sequence is: Shipyard Overview, Steel Storage Yard, Cutting Shop, Panel Production Shops, Section Assembly Shop, Outfitting Shop, Block Assembly Shop, Painting Shop, Grand Block Assembly Area, Building Dock, Outfitting Dock, WIP Flight, and MES Network. The Panel Production Shops stop shows Web Shop, Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop together. The WIP Flight stop hides ordinary production-flow graphics and runs the hidden camera path; the final MES Network stop hides the ordinary production-flow arrows and shows the generated GIS overlay.
+The app opens on slide 1. The full sequence is: slide 0 Shipyard Layout, then Shipyard Overview, Steel Storage Yard, Cutting Shop, Panel Production Shops, Section Assembly Shop, Outfitting Shop, Block Assembly Shop, Painting Shop, Grand Block Assembly Area, Building Dock, Outfitting Dock, WIP Flight, and MES Network. The Panel Production Shops stop shows four images: Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop. Web Shop remains part of the map labels and production flow, but it does not show an image placeholder. Real tour images can be clicked to open a full-screen viewer with the slide title, enlarged image caption, close button, and Escape-key dismissal. The WIP Flight stop hides ordinary production-flow graphics and runs the hidden camera path; the final MES Network stop hides the ordinary production-flow arrows and shows the generated GIS overlay.
 
 To add locations, add placemarks to the KML, then add corresponding structured records and tests. Preserve source placemark ids and names; add separate display labels when a source typo needs a curated label.
 

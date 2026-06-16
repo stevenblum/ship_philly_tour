@@ -9,6 +9,7 @@ import { formatSceneModeStatus } from "./sceneMode.js";
 import { shipyardLocations, toPointLabel } from "./shipyardLocations.js";
 import { processFlowArrows, tourStops } from "./tourStops.js";
 import { ShipyardGisLayer } from "./shipyardGisLayer.js";
+import { ShipyardLayoutOverlay } from "./shipyardLayoutOverlay.js";
 import { WipFlightController } from "./wipFlightController.js";
 import {
   validateShipyardLocations,
@@ -73,13 +74,16 @@ async function bootstrap() {
   updateSceneStatus(sceneStatus);
   const baseCallouts = buildPersistentCallouts(shipyardLocations, tourStops);
   const shipyardGisLayer = new ShipyardGisLayer(viewer);
+  const shipyardLayoutOverlay = new ShipyardLayoutOverlay(viewer);
   const wipFlightController = new WipFlightController(viewer);
   const tourManager = new TourManager(viewer, tourStops, {
     baseArrows: processFlowArrows,
     baseCallouts,
     enableFlowChevrons: resolveFlowChevronEnabled(),
     shipyardGisLayer,
+    shipyardLayoutOverlay,
     wipFlightController,
+    initialStopIndex: 1,
   });
   tourManager.initialize();
   initializeCameraViewCopyButton(viewer, {
@@ -93,6 +97,7 @@ async function bootstrap() {
     tourManager.refreshSurfaceAnchoredGraphics({
       repeat: nextSceneStatus.photorealisticEnabled,
     });
+    tourManager.syncCurrentLayoutOverlay();
   });
   enableCoordinateAuthoring(viewer);
   logger.info("Philadelphia Shipyard tour initialized.");

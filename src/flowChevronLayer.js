@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import { scaleShipGraphVisual } from "./visualScale.js";
 
 // DEFAULT_FLOW_CHEVRON_OPTIONS defines the standalone chevron overlay behavior
 // for production-flow arrows. The overlay follows existing arrow paths instead
@@ -8,10 +9,10 @@ const DEFAULT_FLOW_CHEVRON_OPTIONS = {
   spacingYards: 6,
   inactiveAlpha: 0.52,
   activeAlpha: 0.92,
-  inactiveScale: 0.34,
-  activeScale: 0.46,
+  inactiveScale: scaleShipGraphVisual(0.34),
+  activeScale: scaleShipGraphVisual(0.46),
   pulseAlpha: 0.08,
-  pulseScale: 0.1,
+  pulseScale: scaleShipGraphVisual(0.1),
   speed: 0.12,
   rotationLeadFraction: 0.012,
   color: "#53d8ff",
@@ -20,6 +21,7 @@ const DEFAULT_FLOW_CHEVRON_OPTIONS = {
 
 const METERS_PER_YARD = 0.9144;
 const SCREEN_TANGENT_EPSILON = 0.0001;
+const CHEVRON_STROKE_WIDTH = scaleShipGraphVisual(8);
 
 // encodeSvgAsDataUrl keeps the chevron asset local to this module so the flow
 // overlay can be removed or disabled without touching public static assets.
@@ -32,7 +34,7 @@ function encodeSvgAsDataUrl(svg) {
 export function buildChevronSvgDataUrl() {
   return encodeSvgAsDataUrl(`
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-      <path d="M16 10 L32 24 L16 38" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 10 L32 24 L16 38" fill="none" stroke="white" stroke-width="${CHEVRON_STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   `);
 }

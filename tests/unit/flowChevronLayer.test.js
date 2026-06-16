@@ -59,6 +59,7 @@ describe("flow chevron layer", () => {
 
     expect(dataUrl.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
     expect(decodeURIComponent(dataUrl)).toContain("<svg");
+    expect(decodeURIComponent(dataUrl)).toContain('stroke-width="10"');
   });
 
   test("interpolates along the existing sampled arrow path by distance", () => {
@@ -92,6 +93,8 @@ describe("flow chevron layer", () => {
 
     expect(activeStyle.spacingMeters).toBeCloseTo(inactiveStyle.spacingMeters);
     expect(activeStyle.scale).toBeGreaterThan(inactiveStyle.scale);
+    expect(inactiveStyle.scale).toBeCloseTo(0.425);
+    expect(activeStyle.scale).toBeCloseTo(0.575);
     expect(activeStyle.colorCss).toBe("#35f27a");
     expect(inactiveStyle.colorCss).toBe("#53d8ff");
   });

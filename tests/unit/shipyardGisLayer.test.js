@@ -133,12 +133,13 @@ describe("shipyard GIS Cesium layer styling", () => {
 
     expect(style.label).toBe("delivery / pickup station");
     expect(entity.billboard).toBeUndefined();
-    expect(entity.point.pixelSize).toBe(20);
+    expect(entity.point.pixelSize).toBe(25);
     expect(entity.point.heightReference).toBe(
       Cesium.HeightReference.CLAMP_TO_GROUND,
     );
     expect(entity.label.text).toBe("CNC Cutting");
-    expect(entity.label.pixelOffset.y).toBe(-26);
+    expect(entity.label.font).toBe("15px sans-serif");
+    expect(entity.label.pixelOffset.y).toBe(-32.5);
   });
 
   test("applies line and polygon styling from generated style classes", () => {
@@ -153,7 +154,7 @@ describe("shipyard GIS Cesium layer styling", () => {
       properties: { styleClass: "polygon_3a76f57d" },
     });
 
-    expect(lineEntity.polyline.width).toBe(4);
+    expect(lineEntity.polyline.width).toBe(5);
     expect(lineEntity.polyline.clampToGround).toBe(true);
     expect(
       Cesium.Color.equals(
@@ -162,7 +163,7 @@ describe("shipyard GIS Cesium layer styling", () => {
       ),
     ).toBe(true);
     expect(polygonEntity.polygon.material).toBe(Cesium.Color.TRANSPARENT);
-    expect(polygonEntity.polygon.outlineWidth).toBe(2);
+    expect(polygonEntity.polygon.outlineWidth).toBe(2.5);
     expect(polygonEntity.polygon.heightReference).toBe(
       Cesium.HeightReference.CLAMP_TO_GROUND,
     );

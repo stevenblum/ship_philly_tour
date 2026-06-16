@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import {
   approximateSurfaceDistanceMeters,
@@ -19,6 +20,14 @@ import {
   validateShipyardLocations,
   validateTourStops,
 } from "../../src/tourDataValidator.js";
+
+const PUBLIC_ROOT = new URL("../../public/", import.meta.url);
+
+// publicPhotoExists verifies that authored `/photos/...` paths correspond to
+// real static assets that Vite will serve from the public directory.
+function publicPhotoExists(src) {
+  return existsSync(new URL(`.${src}`, PUBLIC_ROOT));
+}
 
 // These tests verify the app starts from valid KML-derived source records and
 // valid tour-stop data rather than placeholder-only coordinates.
@@ -118,6 +127,7 @@ describe("tour data validation", () => {
   test("accepts the initial narrated tour stops", () => {
     expect(validateTourStops(tourStops)).toEqual([]);
     expect(tourStops.map((stop) => stop.title)).toEqual([
+      "Shipyard Layout",
       "Shipyard Overview",
       "Steel Storage Yard",
       "Cutting Shop",
@@ -132,10 +142,12 @@ describe("tour data validation", () => {
       "WIP Flight",
       "MES Network",
     ]);
-    expect(tourStops[0].stats).toEqual([]);
-    expect(tourStops[3].photos).toHaveLength(5);
-    expect(tourStops[3].photos.map((photo) => photo.label)).toEqual([
-      "Web Shop",
+    expect(tourStops[0].slideNumber).toBe(0);
+    expect(tourStops[1].slideNumber).toBe(1);
+    expect(tourStops[1].stats).toEqual([]);
+    const panelStop = tourStops.find((stop) => stop.id === "panel-production");
+    expect(panelStop.photos).toHaveLength(4);
+    expect(panelStop.photos.map((photo) => photo.label)).toEqual([
       "Large Panel Shop",
       "Double Bottom Shop",
       "Bulkhead Shop",
@@ -143,14 +155,66 @@ describe("tour data validation", () => {
     ]);
   });
 
+  test("maps initial photos to the correct shops and keeps requested shops photo-free", () => {
+    const expectedLocationPhotos = new Map([
+      ["cutting-area", "/photos/philly-cutting-area.jpg"],
+      ["large-panel-line", "/photos/philly-large-panel.jpg"],
+      ["double-bottom-line", "/photos/philly-double-bottom.jpg"],
+      ["bulkhead-shop", "/photos/philly-bulkhead-line.jpg"],
+      ["curved-panel-shop", "/photos/philly-curved-panel.jpg"],
+      ["grand-block-shop", "/photos/philly-grand-block.jpg"],
+      ["paint-shop", "/photos/philly-paint-shop.png"],
+      ["grand-block-assembly-area", "/photos/philly-block-transport.png"],
+      ["building-dock", "/photos/philly-building-dock.jpg"],
+    ]);
+    const locationsWithoutPhotos = [
+      "steel-storage-area",
+      "web-shop",
+      "section-asembly-shop",
+      "outfitting-shop",
+      "outfitting-dock",
+    ];
+    const panelStop = tourStops.find((stop) => stop.id === "panel-production");
+
+    for (const [slug, expectedPhoto] of expectedLocationPhotos) {
+      const location = getLocationBySlug(slug);
+
+      expect(location.photo).toBe(expectedPhoto);
+      expect(publicPhotoExists(expectedPhoto)).toBe(true);
+    }
+
+    for (const slug of locationsWithoutPhotos) {
+      expect(getLocationBySlug(slug).photo).toBeUndefined();
+    }
+
+    expect(tourStops.find((stop) => stop.id === "overview").photo).toBeNull();
+    expect(tourStops.find((stop) => stop.id === "shipyard-layout").photo).toBeNull();
+    expect(publicPhotoExists("/photos/philly-shipyard-layout.png")).toBe(true);
+    expect(tourStops.find((stop) => stop.id === "cutting-shop").photo).toBe(
+      "/photos/philly-cutting-area.jpg",
+    );
+    expect(tourStops.find((stop) => stop.id === "paint-shop").photo).toBe(
+      "/photos/philly-paint-shop.png",
+    );
+    expect(tourStops.find((stop) => stop.id === "building-dock").photo).toBe(
+      "/photos/philly-building-dock.jpg",
+    );
+    expect(panelStop.photos).toEqual([
+      { label: "Large Panel Shop", src: "/photos/philly-large-panel.jpg" },
+      { label: "Double Bottom Shop", src: "/photos/philly-double-bottom.jpg" },
+      { label: "Bulkhead Shop", src: "/photos/philly-bulkhead-line.jpg" },
+      { label: "Curved Panel Shop", src: "/photos/philly-curved-panel.jpg" },
+    ]);
+  });
+
   test("uses the published-layout camera heading for authored stops", () => {
     const authoredCameraStops = tourStops.filter(
-      (stop) => stop.cameraMode !== "pathFlight",
+      (stop) => stop.cameraMode === "targetCentered",
     );
     const headings = authoredCameraStops.map((stop) => stop.view.headingDeg);
 
     expect(new Set(tourStops.map((stop) => stop.cameraMode))).toEqual(
-      new Set(["targetCentered", "pathFlight"]),
+      new Set(["layoutOverlay", "targetCentered", "pathFlight"]),
     );
     expect(headings.every((heading) => heading > 84 && heading < 86)).toBe(
       true,
@@ -305,6 +369,7 @@ describe("tour data validation", () => {
       tourStops.map((stop) => [stop.id, stop.activeCalloutIds ?? []]),
     );
 
+    expect(activeIdsByStop.get("shipyard-layout")).toEqual([]);
     expect(activeIdsByStop.get("overview")).toEqual([]);
     expect(activeIdsByStop.get("steel-storage-yard")).toEqual([
       "steel-storage-area-label",
@@ -347,6 +412,7 @@ describe("tour data validation", () => {
       tourStops.map((stop) => [stop.id, stop.activeArrowIds ?? []]),
     );
 
+    expect(activeArrowsByStop.get("shipyard-layout")).toEqual([]);
     expect(activeArrowsByStop.get("overview")).toEqual([]);
     expect(activeArrowsByStop.get("steel-storage-yard")).toEqual([]);
     expect(activeArrowsByStop.get("cutting-shop")).toEqual([
@@ -409,6 +475,39 @@ describe("tour data validation", () => {
     expect(finalStop.title).toBe("MES Network");
   });
 
+  test("adds slide 0 as a registered layout overlay before the satellite overview", () => {
+    const layoutStop = tourStops[0];
+    const overviewStop = tourStops[1];
+
+    expect(layoutStop.id).toBe("shipyard-layout");
+    expect(layoutStop.title).toBe("Shipyard Layout");
+    expect(layoutStop.slideNumber).toBe(0);
+    expect(layoutStop.cameraMode).toBe("layoutOverlay");
+    expect(layoutStop.layoutOverlay).toEqual({
+      source: "data/shipyard-layout-registration.json",
+      fadeDurationSec: 1.5,
+      durationSec: 3,
+    });
+    expect(layoutStop.showBaseCallouts).toBe(false);
+    expect(layoutStop.showBaseArrows).toBe(false);
+    expect(overviewStop.id).toBe("overview");
+    expect(overviewStop.slideNumber).toBe(1);
+  });
+
+  test("uses the captured target-centered overview camera view", () => {
+    const overviewStop = tourStops.find((stop) => stop.id === "overview");
+
+    expect(overviewStop.cameraMode).toBe("targetCentered");
+    expect(overviewStop.target.lonDeg).toBeCloseTo(-75.19079894);
+    expect(overviewStop.target.latDeg).toBeCloseTo(39.88888721);
+    expect(overviewStop.target.heightM).toBeCloseTo(-17.683);
+    expect(overviewStop.target.radiusM).toBe(430);
+    expect(overviewStop.view.headingDeg).toBeCloseTo(84.992974);
+    expect(overviewStop.view.pitchDeg).toBeCloseTo(-48.0084);
+    expect(overviewStop.view.rangeM).toBeCloseTo(722.82);
+    expect(overviewStop.view.durationSec).toBe(4);
+  });
+
   test("adds a final full GIS overlay slide after the production-flow sequence", () => {
     const finalStop = tourStops.at(-1);
 
@@ -463,9 +562,10 @@ describe("tour data validation", () => {
 
   test("rejects old camera-only stops that are not explicit absolute poses", () => {
     const oldCameraStop = {
-      ...tourStops[0],
+      ...tourStops.find((stop) => stop.id === "overview"),
       target: undefined,
       view: undefined,
+      cameraMode: "targetCentered",
       camera: {
         lon: -75,
         lat: 39,
@@ -484,6 +584,29 @@ describe("tour data validation", () => {
     expect(errors.some((error) => error.includes(".view is required"))).toBe(
       true,
     );
+  });
+
+  test("rejects malformed layoutOverlay stops", () => {
+    const invalidLayoutStop = {
+      ...tourStops[0],
+      layoutOverlay: {
+        source: "",
+        fadeDurationSec: 0,
+        durationSec: -1,
+      },
+    };
+
+    const errors = validateTourStops([invalidLayoutStop]);
+
+    expect(errors.some((error) => error.includes("layoutOverlay.source"))).toBe(
+      true,
+    );
+    expect(
+      errors.some((error) => error.includes("layoutOverlay.fadeDurationSec")),
+    ).toBe(true);
+    expect(
+      errors.some((error) => error.includes("layoutOverlay.durationSec")),
+    ).toBe(true);
   });
 
   test("rejects malformed pathFlight stops", () => {

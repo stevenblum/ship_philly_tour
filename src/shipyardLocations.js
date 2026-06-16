@@ -106,7 +106,7 @@ export const shipyardLocations = [
       tilt: 65.08328608071118,
       range: 316.0216072641924,
     },
-    photo: "/photos/philly-large-panel.png",
+    photo: "/photos/philly-large-panel.jpg",
   },
   {
     id: "040E46EF1D3FF144F958",
@@ -125,6 +125,7 @@ export const shipyardLocations = [
       tilt: 65.08328608071118,
       range: 316.0216072641924,
     },
+    photo: "/photos/philly-double-bottom.jpg",
   },
   {
     id: "0244E0A4203FF145FADC",
@@ -146,6 +147,7 @@ export const shipyardLocations = [
     name: "Cutting Area",
     source: "curated",
     point: pointNorthOf(WEB_SHOP_POINT, 40 * METERS_PER_YARD),
+    photo: "/photos/philly-cutting-area.jpg",
   },
   {
     id: "0CB222D0703FF146815F",
@@ -161,6 +163,7 @@ export const shipyardLocations = [
       tilt: 70.45706675369664,
       range: 218.47191249959,
     },
+    photo: "/photos/philly-bulkhead-line.jpg",
   },
   {
     id: "046983499A3FF146D870",
@@ -194,7 +197,7 @@ export const shipyardLocations = [
       tilt: 70.45706675369664,
       range: 218.47191249959,
     },
-    photo: "/photos/philly-curved-panel.png",
+    photo: "/photos/philly-curved-panel.jpg",
   },
   {
     id: "032F13B6683FF1474741",
@@ -233,7 +236,7 @@ export const shipyardLocations = [
       tilt: 70.4574719099941,
       range: 266.2782838926433,
     },
-    photo: "/photos/philly-grand-block.png",
+    photo: "/photos/philly-grand-block.jpg",
   },
   {
     id: "00ECA6429F3FF147E080",
@@ -252,6 +255,7 @@ export const shipyardLocations = [
       tilt: 70.45806864409444,
       range: 336.6882845749205,
     },
+    photo: "/photos/philly-paint-shop.png",
   },
   {
     id: "07E503C0223FF149AC3F",
@@ -289,6 +293,7 @@ export const shipyardLocations = [
       tilt: 49.1132067933727,
       range: 217.8160327929072,
     },
+    photo: "/photos/philly-building-dock.jpg",
   },
   {
     id: "0A70A6840D3FF14A7A1F",

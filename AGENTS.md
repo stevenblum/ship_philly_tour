@@ -22,13 +22,16 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 - `src/sceneMode.js`: lightweight/demo mode parsing for env variables and URL overrides.
 - `src/sceneSetup.js`: Cesium viewer creation, standard `cesium-navigation-es6` compass/navigation widget setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, default-globe fallback.
 - `src/photorealisticToggle.js`: upper-right presentation checkbox for enabling/disabling Google Photorealistic 3D Tiles at runtime.
+- `src/photoLightbox.js`: reusable full-screen image expansion overlay for tour photos.
 - `src/shipyardLocations.js`: structured KML-derived shop and yard placemarks.
 - `public/data/philly-tour.kml`: canonical browser-accessible KML source copy.
 - `src/tourStops.js`: narrated tour sequence and slide-specific graphics.
+- `src/shipyardLayoutOverlay.js`: slide-0 georeferenced PNG layout overlay drawn above the live Cesium scene, and overhead layout camera.
 - `src/shipyardGisLayer.js`: final-slide GeoJSON overlay for manufacturing equipment, storage areas, shop boundaries, process edges, and roads.
 - `src/wipFlightController.js`: hidden WIP Tour camera fly-through using generated KML route data.
 - `src/arrowControlOffset.js`: proportional arrow curve offset calculation and left/right route-side control.
 - `src/flowChevronLayer.js`: standalone repeated-chevron overlay that follows sampled production-flow arrow paths and can be toggled independently.
+- `src/visualScale.js`: shared presentation scale for shop labels, markers, arrows, chevrons, and MES graph objects.
 - `src/cameraUtils.js`: target-centered and absolute-pose Cesium camera helpers.
 - `src/tourManager.js`: navigation, overlay updates, keyboard controls, progress dots.
 - `src/calloutManager.js`: point labels, highlighted polygons, curved arrows, fallback/debug polylines.
@@ -36,7 +39,9 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 - `src/tourDataValidator.js`: tour and KML-derived location validation.
 - `src/logger.js`: level-based logging and authoring diagnostics.
 - `scripts/convertShipyardGpkg.mjs`: repeatable GeoPackage-to-GeoJSON/style/manifest conversion for `Philly_Shipyard.gpkg`.
+- `scripts/convertShipyardLayoutKml.mjs`: repeatable `WIP_Tour.kml` anchor-to-layout-registration conversion for slide 0.
 - `scripts/convertWipTourKml.mjs`: repeatable `WIP_Tour.kml` LineString-to-JSON conversion that ignores old shop placemarks.
+- `public/data/shipyard-layout-registration.json`: generated registration for `public/photos/philly-shipyard-layout.png`.
 - `public/data/shipyard-gis/`: generated static GeoJSON, style, and manifest assets used by the final GIS overlay slide.
 - `public/data/wip-tour-path.json`: generated hidden camera route for the WIP Flight slide.
 - `vite.config.js`: Vite base path and Cesium static asset configuration.
@@ -56,6 +61,7 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 ```bash
 npm run dev
 npm run dev:demo
+npm run data:layout
 npm run data:shipyard
 npm run data:wip-tour
 npm run build

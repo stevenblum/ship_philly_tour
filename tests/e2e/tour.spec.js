@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 // The smoke test checks the click-through presentation contract and lets Cesium
 // handle rendering without asserting fragile WebGL pixels.
 test("tour loads and advances", async ({ page }) => {
+  test.setTimeout(45_000);
   const consoleErrors = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
@@ -58,6 +59,13 @@ test("tour loads and advances", async ({ page }) => {
   await expect(page.getByRole("button", { name: /next/i })).toBeVisible();
 
   const firstTitle = await page.locator("#slideTitle").textContent();
+  await expect(page.locator("#slideTitle")).toHaveText("Shipyard Overview");
+
+  await page.getByRole("button", { name: /back/i }).click();
+  await expect(page.locator("#slideTitle")).toHaveText("Shipyard Layout");
+
+  await page.getByRole("button", { name: /next/i }).click();
+  await expect(page.locator("#slideTitle")).toHaveText("Shipyard Overview");
 
   await page.getByRole("button", { name: /next/i }).click();
   await expect(page.locator("#slideTitle")).not.toHaveText(firstTitle ?? "");
@@ -65,18 +73,51 @@ test("tour loads and advances", async ({ page }) => {
   await page.keyboard.press("ArrowLeft");
   await expect(page.locator("#slideTitle")).toHaveText(firstTitle ?? "");
 
-  await expect(page.locator(".progress-dot")).toHaveCount(13);
+  await expect(page.locator(".progress-dot")).toHaveCount(14);
 
-  await page.locator(".progress-dot").nth(3).click();
+  await page.locator(".progress-dot").nth(4).click();
   await expect(page.locator("#slideTitle")).toHaveText(
     "Panel Production Shops",
   );
-  await expect(page.locator(".photo-item")).toHaveCount(5);
+  await expect(page.locator(".photo-item")).toHaveCount(4);
+  const largePanelThumbnail = page.getByRole("button", {
+    name: "Expand image: Large Panel Shop",
+  });
+  const thumbnailBox = await largePanelThumbnail.boundingBox();
 
-  await page.locator(".progress-dot").nth(11).click();
-  await expect(page.locator("#slideTitle")).toHaveText("WIP Flight");
+  await largePanelThumbnail.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator(".photo-lightbox-image")).toBeVisible();
+  await expect(page.locator(".photo-lightbox-title")).toHaveText(
+    "Panel Production Shops",
+  );
+  await expect(page.locator(".photo-lightbox-caption")).toHaveText(
+    "Large Panel Shop",
+  );
+  await expect(
+    page.getByRole("button", { name: "Close expanded image" }),
+  ).toBeVisible();
+  const lightboxImageBox = await page
+    .locator(".photo-lightbox-image")
+    .boundingBox();
+  const viewportSize = page.viewportSize();
+
+  expect(lightboxImageBox?.width).toBeGreaterThan(
+    (thumbnailBox?.width ?? 0) * 1.5,
+  );
+  expect(lightboxImageBox?.height).toBeLessThanOrEqual(
+    (viewportSize?.height ?? 0) * 0.85 + 2,
+  );
+  expect(lightboxImageBox?.width).toBeLessThanOrEqual(
+    (viewportSize?.width ?? 0) * 0.85 + 2,
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
 
   await page.locator(".progress-dot").nth(12).click();
+  await expect(page.locator("#slideTitle")).toHaveText("WIP Flight");
+
+  await page.locator(".progress-dot").nth(13).click();
   await expect(page.locator("#slideTitle")).toHaveText("MES Network");
   expect(consoleErrors).toEqual([]);
 });

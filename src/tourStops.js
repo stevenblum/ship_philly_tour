@@ -218,17 +218,45 @@ export const processFlowArrows = [
 // the overall shipbuilding process for a large-group talk.
 export const tourStops = [
   {
+    id: "shipyard-layout",
+    title: "Shipyard Layout",
+    slideNumber: 0,
+    text: "A registered overhead layout view aligns the shipyard drawing to the real yard before the satellite-based tour begins.",
+    cameraMode: "layoutOverlay",
+    layoutOverlay: {
+      source: "data/shipyard-layout-registration.json",
+      fadeDurationSec: 1.5,
+      durationSec: 3,
+    },
+    photo: null,
+    stats: [],
+    callouts: [],
+    activeCalloutIds: [],
+    activeArrowIds: [],
+    showBaseCallouts: false,
+    showBaseArrows: false,
+    polygons: [],
+    arrows: [],
+    polylines: [],
+  },
+  {
     id: "overview",
     title: "Shipyard Overview",
+    slideNumber: 1,
     text: "A wide view of the yard layout: steel enters at storage, flows through cutting and panel production, then moves into assembly, painting, block work, and the waterfront docks.",
     cameraMode: "targetCentered",
     target: {
-      lonDeg: -75.1903,
-      latDeg: 39.8886,
-      heightM: 25,
+      lonDeg: -75.19079894,
+      latDeg: 39.88888721,
+      heightM: -17.683,
       radiusM: 430,
     },
-    view: targetView({ pitchDeg: -48, rangeM: 1400, durationSec: 4 }),
+    view: {
+      headingDeg: 84.992974,
+      pitchDeg: -48.0084,
+      rangeM: 722.82,
+      durationSec: 4,
+    },
     photo: null,
     stats: [],
     callouts: shipyardLocations.map(toPointLabel),
@@ -241,6 +269,7 @@ export const tourStops = [
   {
     id: "steel-storage-yard",
     title: "Steel Storage Yard",
+    slideNumber: 2,
     text: "The production flow begins with incoming steel staged at the yard before it moves into cutting and the panel-production shops.",
     cameraMode: "targetCentered",
     target: {
@@ -267,11 +296,12 @@ export const tourStops = [
   {
     id: "cutting-shop",
     title: "Cutting Shop",
+    slideNumber: 3,
     text: "Cutting converts stored plate into prepared parts that feed the panel-production shops.",
     cameraMode: "targetCentered",
     target: targetFromLocation(cuttingArea, 75),
     view: targetView({ pitchDeg: -40, rangeM: 360 }),
-    photo: null,
+    photo: cuttingArea.photo,
     stats: [],
     callouts: shopCallouts(cuttingArea, steelStorage, webShop),
     activeCalloutIds: [labelId(cuttingArea)],
@@ -283,6 +313,7 @@ export const tourStops = [
   {
     id: "panel-production",
     title: "Panel Production Shops",
+    slideNumber: 4,
     text: "Panel production is a major organizing layer in the yard: flat panels, double bottoms, bulkheads, and curved panels move from specialized shop work toward larger assemblies.",
     cameraMode: "targetCentered",
     target: {
@@ -293,10 +324,9 @@ export const tourStops = [
     },
     view: targetView({ pitchDeg: -38, rangeM: 470 }),
     photos: [
-      { label: "Web Shop", src: null },
       { label: "Large Panel Shop", src: largePanel.photo },
-      { label: "Double Bottom Shop", src: null },
-      { label: "Bulkhead Shop", src: null },
+      { label: "Double Bottom Shop", src: doubleBottom.photo },
+      { label: "Bulkhead Shop", src: bulkhead.photo },
       { label: "Curved Panel Shop", src: curvedPanel.photo },
     ],
     stats: [],
@@ -328,6 +358,7 @@ export const tourStops = [
   {
     id: "section-assembly-shop",
     title: "Section Assembly Shop",
+    slideNumber: 5,
     text: "Section assembly combines shop output into larger pieces, creating the transition from component fabrication to blocks that can move through the yard.",
     cameraMode: "targetCentered",
     target: targetFromLocation(sectionAssembly, 80),
@@ -350,6 +381,7 @@ export const tourStops = [
   {
     id: "outfitting-shop",
     title: "Outfitting Shop",
+    slideNumber: 6,
     text: "Outfitting work brings systems, equipment, and production detail into the flow before blocks move through later-stage assembly and painting.",
     cameraMode: "targetCentered",
     target: targetFromLocation(outfittingShop, 80),
@@ -366,6 +398,7 @@ export const tourStops = [
   {
     id: "grand-block-shop",
     title: "Block Assembly Shop",
+    slideNumber: 7,
     text: "Block assembly links shop output and outfitting work to the large-scale ship sections that later move toward open assembly areas and the docks.",
     cameraMode: "targetCentered",
     target: targetFromLocation(grandBlock, 110),
@@ -382,11 +415,12 @@ export const tourStops = [
   {
     id: "paint-shop",
     title: "Painting Shop",
+    slideNumber: 8,
     text: "Painting is an important production boundary: work moves from structural assembly toward protective coatings and later-stage completion.",
     cameraMode: "targetCentered",
     target: targetFromLocation(paintShop, 100),
     view: targetView({ pitchDeg: -42, rangeM: 430 }),
-    photo: null,
+    photo: paintShop.photo,
     stats: [],
     callouts: shopCallouts(paintShop, grandBlock),
     activeCalloutIds: [labelId(paintShop)],
@@ -398,6 +432,7 @@ export const tourStops = [
   {
     id: "grand-block-assembly-area",
     title: "Grand Block Assembly Area",
+    slideNumber: 9,
     text: "The grand block assembly area is where larger assemblies are organized before moving into the final ship construction sequence.",
     cameraMode: "targetCentered",
     target: targetFromLocation(grandBlockAssembly, 130),
@@ -419,6 +454,7 @@ export const tourStops = [
   {
     id: "building-dock",
     title: "Building Dock",
+    slideNumber: 10,
     text: "The building dock is the major downstream destination where large assemblies become the ship structure seen at yard scale.",
     cameraMode: "targetCentered",
     target: targetFromLocation(buildingDock, 150),
@@ -428,7 +464,7 @@ export const tourStops = [
       rangeM: 306.779,
       durationSec: 3,
     },
-    photo: null,
+    photo: buildingDock.photo,
     stats: [],
     callouts: shopCallouts(buildingDock, grandBlockAssembly),
     activeCalloutIds: [labelId(buildingDock)],
@@ -440,6 +476,7 @@ export const tourStops = [
   {
     id: "outfitting-dock",
     title: "Outfitting Dock",
+    slideNumber: 11,
     text: "The outfitting dock represents the final waterfront stage in this layout view, where the ship moves from major construction toward completion activities.",
     cameraMode: "targetCentered",
     target: targetFromLocation(outfittingDock, 150),
@@ -456,6 +493,7 @@ export const tourStops = [
   {
     id: "wip-flight",
     title: "WIP Flight",
+    slideNumber: 12,
     text: "A low, forward-looking fly-through follows the work-in-process route across the yard before the final network overview.",
     cameraMode: "pathFlight",
     pathFlight: {
@@ -479,6 +517,7 @@ export const tourStops = [
   {
     id: "manufacturing-equipment-and-roads",
     title: "MES Network",
+    slideNumber: 13,
     text: "The final view shows the full GIS overlay for manufacturing equipment, storage areas, shop boundaries, process connections, and roads across the yard.",
     cameraMode: "targetCentered",
     target: {

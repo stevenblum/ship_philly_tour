@@ -112,10 +112,10 @@ describe("point-label callout graphics", () => {
     );
 
     expect(addedEntities).toHaveLength(2);
-    expect(webEntity.point.pixelSize).toBe(10);
-    expect(webEntity.label.font).toBe("15px sans-serif");
-    expect(panelEntity.point.pixelSize).toBe(17);
-    expect(panelEntity.label.font).toBe("bold 17px sans-serif");
+    expect(webEntity.point.pixelSize).toBe(12.5);
+    expect(webEntity.label.font).toBe("18.75px sans-serif");
+    expect(panelEntity.point.pixelSize).toBe(21.25);
+    expect(panelEntity.label.font).toBe("bold 21.25px sans-serif");
 
     manager.showStopGraphics({
       callouts: [callout],
@@ -127,10 +127,10 @@ describe("point-label callout graphics", () => {
 
     expect(addedEntities).toHaveLength(2);
     expect(viewer.entities.remove).not.toHaveBeenCalled();
-    expect(webEntity.point.pixelSize).toBe(17);
-    expect(webEntity.label.font).toBe("bold 17px sans-serif");
-    expect(panelEntity.point.pixelSize).toBe(10);
-    expect(panelEntity.label.font).toBe("15px sans-serif");
+    expect(webEntity.point.pixelSize).toBe(21.25);
+    expect(webEntity.label.font).toBe("bold 21.25px sans-serif");
+    expect(panelEntity.point.pixelSize).toBe(12.5);
+    expect(panelEntity.label.font).toBe("18.75px sans-serif");
   });
 
   test("keeps every visible overview label inactive when activeCalloutIds is empty", () => {
@@ -155,8 +155,8 @@ describe("point-label callout graphics", () => {
     });
 
     for (const entity of addedEntities) {
-      expect(entity.point.pixelSize).toBe(10);
-      expect(entity.label.font).toBe("15px sans-serif");
+      expect(entity.point.pixelSize).toBe(12.5);
+      expect(entity.label.font).toBe("18.75px sans-serif");
     }
   });
 
@@ -196,7 +196,7 @@ describe("point-label callout graphics", () => {
       addedEntities.filter((entity) => entity.id === baseArrow.id),
     ).toHaveLength(1);
     expect(addedEntities.filter((entity) => entity.billboard)).toHaveLength(1);
-    expect(addedEntities[0].polyline.width).toBe(5);
+    expect(addedEntities[0].polyline.width).toBe(6.25);
     expect(viewer.entities.remove).not.toHaveBeenCalled();
   });
 
@@ -322,7 +322,7 @@ describe("point-label callout graphics", () => {
     const arrowEntity = addedEntities.find(
       (entity) => entity.id === baseArrow.id,
     );
-    expect(arrowEntity.polyline.width).toBe(8);
+    expect(arrowEntity.polyline.width).toBe(10);
     expect(
       Cesium.Color.equals(
         getArrowColor(arrowEntity),
@@ -341,7 +341,7 @@ describe("point-label callout graphics", () => {
     expect(
       addedEntities.filter((entity) => entity.id === baseArrow.id),
     ).toHaveLength(1);
-    expect(arrowEntity.polyline.width).toBe(5);
+    expect(arrowEntity.polyline.width).toBe(6.25);
     expect(
       Cesium.Color.equals(
         getArrowColor(arrowEntity),

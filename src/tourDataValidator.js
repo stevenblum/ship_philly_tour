@@ -129,8 +129,12 @@ function validateAbsolutePoseCamera(camera, path, errors) {
 function validateStopCamera(stop, path, errors) {
   const cameraMode = stop.cameraMode ?? "targetCentered";
 
-  if (!["targetCentered", "absolutePose", "pathFlight"].includes(cameraMode)) {
-    errors.push(`${path}.cameraMode must be "targetCentered", "absolutePose", or "pathFlight".`);
+  if (
+    !["targetCentered", "absolutePose", "pathFlight", "layoutOverlay"].includes(
+      cameraMode,
+    )
+  ) {
+    errors.push(`${path}.cameraMode must be "targetCentered", "absolutePose", "pathFlight", or "layoutOverlay".`);
     return;
   }
 
@@ -141,6 +145,11 @@ function validateStopCamera(stop, path, errors) {
 
   if (cameraMode === "pathFlight") {
     validatePathFlight(stop.pathFlight, path, errors);
+    return;
+  }
+
+  if (cameraMode === "layoutOverlay") {
+    validateLayoutOverlay(stop.layoutOverlay, path, errors);
     return;
   }
 
@@ -187,6 +196,34 @@ function validatePathFlight(pathFlight, path, errors) {
 
   if (pathFlight.pitchDeg !== undefined && !isFiniteNumber(pathFlight.pitchDeg)) {
     errors.push(`${path}.pathFlight.pitchDeg must be a finite number when provided.`);
+  }
+}
+
+// validateLayoutOverlay checks the registered PNG slide contract. The overlay
+// source points at generated public JSON, while fade and camera durations drive
+// the presentation transition rather than Cesium target-centered movement.
+function validateLayoutOverlay(layoutOverlay, path, errors) {
+  if (!layoutOverlay) {
+    errors.push(`${path}.layoutOverlay is required for layoutOverlay camera mode.`);
+    return;
+  }
+
+  if (!layoutOverlay.source || typeof layoutOverlay.source !== "string") {
+    errors.push(`${path}.layoutOverlay.source is required.`);
+  }
+
+  if (
+    layoutOverlay.fadeDurationSec !== undefined &&
+    !isPositiveFiniteNumber(layoutOverlay.fadeDurationSec)
+  ) {
+    errors.push(`${path}.layoutOverlay.fadeDurationSec must be positive when provided.`);
+  }
+
+  if (
+    layoutOverlay.durationSec !== undefined &&
+    !isPositiveFiniteNumber(layoutOverlay.durationSec)
+  ) {
+    errors.push(`${path}.layoutOverlay.durationSec must be positive when provided.`);
   }
 }
 

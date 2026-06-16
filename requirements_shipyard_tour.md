@@ -145,6 +145,9 @@ The app should expose these commands through `package.json`:
     "build": "vite build",
     "build:github": "VITE_APP_BASE_PATH=/ship_philly_tour/ vite build",
     "preview": "vite preview",
+    "data:layout": "node scripts/convertShipyardLayoutKml.mjs",
+    "data:shipyard": "node scripts/convertShipyardGpkg.mjs",
+    "data:wip-tour": "node scripts/convertWipTourKml.mjs",
     "test": "npm run test:unit",
     "test:watch": "vitest",
     "test:unit": "vitest run --no-file-parallelism",
@@ -631,7 +634,41 @@ The WIP Flight slide should:
 - Not draw the WIP polyline in the scene.
 - Stop and clean up the hidden moving entity when the presenter leaves the slide.
 
-### 9.4 Camera view authoring
+### 9.4 Shipyard layout overlay slide
+
+Add a slide 0 titled `Shipyard Layout` before `Shipyard Overview`. The app should still open on slide 1, `Shipyard Overview`; pressing Back from slide 1 should show slide 0, and pressing Next should return to slide 1.
+
+Use `public/photos/philly-shipyard-layout.png` as a georeferenced flat Cesium surface, not as a side-panel photo. The layout image should be aligned by two KML reference placemarks in `WIP_Tour.kml`:
+
+- `Section_Assembly_NE_Corner`, with the current KML typo `Secetion_Assembly_NE_Corner` accepted as an alias.
+- `Building_Dock_SW_Corner`.
+
+Use image pixel coordinates with `(x from left, y from top)`. Pixel `(1445, 659)` corresponds to Section Assembly NE, and pixel `(3181, 1373)` corresponds to Building Dock SW. Solve a uniform scale, rotation, and translation from those anchors, generate four geospatial image corners, and write the browser asset:
+
+- `public/data/shipyard-layout-registration.json`
+
+Add `npm run data:layout` as the repeatable refresh command. Run it whenever the layout image, layout anchor placemarks, or anchor pixel coordinates change.
+
+Runtime behavior:
+
+- Use `cameraMode: "layoutOverlay"` for slide 0.
+- Render the PNG as a rotated textured quad/primitive using the generated corners and texture coordinates.
+- Fly the camera directly overhead with pitch `-90` and a heading that makes the PNG appear upright.
+- Hide ordinary shop labels, production-flow arrows, chevrons, photos, WIP flight graphics, and GIS overlay on slide 0.
+- Fade the layout PNG between alpha 0 and alpha 1 over 1.5 seconds when entering or leaving slide 0.
+- Keep ordinary map/satellite imagery layers visible, attached, and loaded while slide 0 is active. Do not fade imagery layer alpha to 0.
+- If Google Photorealistic 3D Tiles are loaded, keep the existing tileset visible behind the layout PNG. Do not hide, remove, or recreate the tileset during this transition.
+- Render the layout PNG primitive above terrain and Google 3D Tiles, including disabling depth testing for that primitive so the drawing remains readable as an overlay.
+- Include slide 0 in the progress dots, with accessible labels based on the authored slide number.
+
+Approximate generated registration sanity values from the current anchors:
+
+- scale: about `0.3715 m/px`
+- image width: about `1247.8 m`
+- image height: about `782.3 m`
+- center: about `lon -75.19002757`, `lat 39.89006662`
+
+### 9.5 Camera view authoring
 
 Default all authored tour stops to `cameraMode: "targetCentered"`. In this mode, the tour stop coordinate is the point that should appear at the center of the view, not the camera destination.
 
@@ -828,11 +865,10 @@ export const tourStops = [
       durationSec: 3,
     },
     photos: [
-      { label: "Web Shop", src: null },
-      { label: "Large Panel Shop", src: "/photos/philly-large-panel.png" },
-      { label: "Double Bottom Shop", src: null },
-      { label: "Bulkhead Shop", src: null },
-      { label: "Curved Panel Shop", src: "/photos/philly-curved-panel.png" },
+      { label: "Large Panel Shop", src: "/photos/philly-large-panel.jpg" },
+      { label: "Double Bottom Shop", src: "/photos/philly-double-bottom.jpg" },
+      { label: "Bulkhead Shop", src: "/photos/philly-bulkhead-line.jpg" },
+      { label: "Curved Panel Shop", src: "/photos/philly-curved-panel.jpg" },
     ],
     callouts: [
       {
@@ -1441,7 +1477,8 @@ The first working version should include:
 6. Google Photorealistic 3D Tiles load only when demo/photorealistic mode is explicitly selected and token permissions plus network access allow.
 7. Lightweight fallback works when photorealistic tiles are disabled, unavailable, or fail to load.
 8. KML-derived shop and yard placemarks from `Philly Tour.kml` / `public/data/philly-tour.kml` are used as the foundation for the initial tour data.
-9. Thirteen audience-facing tour stops in this order:
+9. Slide 0 reference overlay plus thirteen audience-facing tour stops:
+   - Slide 0: Shipyard Layout.
    - Shipyard Overview.
    - Steel Storage Yard.
    - Cutting Shop.
@@ -1483,8 +1520,9 @@ The first working version should include:
 35. Knip dead-code detection configured through `knip.json` and wired to `npm run deadcode`.
 36. Standard Cesium compass/navigation widget initialized through `cesium-navigation-es6` with the plugin defaults for compass, zoom controls, distance legend, and compass outer ring.
 37. Upper-right runtime checkbox that enables/disables Google Photorealistic 3D Tiles without changing code.
-38. Final MES Network slide generated from `Philly_Shipyard.gpkg` through `npm run data:shipyard` and loaded as a static GeoJSON/style overlay.
-39. Second-to-last WIP Flight slide generated from the `WIP Tour` LineString in `WIP_Tour.kml` through `npm run data:wip-tour`.
+38. Slide 0 Shipyard Layout overlay generated from `WIP_Tour.kml` anchors through `npm run data:layout`, rendered as a georeferenced PNG surface, and available by pressing Back from the default overview slide.
+39. Final MES Network slide generated from `Philly_Shipyard.gpkg` through `npm run data:shipyard` and loaded as a static GeoJSON/style overlay.
+40. Second-to-last WIP Flight slide generated from the `WIP Tour` LineString in `WIP_Tour.kml` through `npm run data:wip-tour`.
 
 ## 18. Acceptance Criteria
 
@@ -1522,14 +1560,19 @@ The implementation is acceptable when:
 - The Cutting Shop stop activates the curated Cutting Area point label.
 - Shop-location point labels anchor to the map surface in lightweight mode and clamp to the rendered 3D Tiles surface in photorealistic mode when tiles load.
 - Photorealistic 3D Tiles are created with collision enabled so Cesium height references can resolve surface-clamped labels against the tile geometry.
-- The first tour stop appears automatically.
-- The tour sequence follows the specified thirteen-stop presentation order and ends with MES Network.
+- The app opens on slide 1, `Shipyard Overview`, not slide 0.
+- Pressing Back from slide 1 shows slide 0, `Shipyard Layout`, and pressing Next returns to `Shipyard Overview`.
+- Slide 0 renders `public/photos/philly-shipyard-layout.png` as a georeferenced flat image surface using `public/data/shipyard-layout-registration.json`.
+- Slide 0 fades only the layout PNG primitive while keeping map/satellite imagery visible and loaded underneath.
+- Slide 0 keeps any already-loaded Google Photorealistic 3D Tiles visible behind the layout PNG and does not toggle tileset visibility.
+- The tour sequence follows the specified slide-0 plus thirteen-stop presentation order and ends with MES Network.
 - The WIP Flight slide appears immediately before MES Network.
 - The WIP Flight slide uses only the `WIP Tour` LineString from `WIP_Tour.kml`, ignores old shop placemarks, follows a hidden sampled camera path for about 60 seconds, and does not draw the route polyline.
 - The final MES Network slide loads the generated GeoJSON assets from `public/data/shipyard-gis/` and applies styles by `styleClass`.
 - The final GIS slide hides or suppresses ordinary production-flow arrows and chevrons while the full equipment, roads, process-edge, and boundary overlay is visible.
 - The overview stop does not show KML source or imported-location count rows.
-- The panel-production stop shows five shop image slots for Web Shop, Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop.
+- The panel-production stop shows four shop images for Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop. Web Shop remains part of the map labels and production flow but should not render a blank image placeholder.
+- Real tour images can be clicked or keyboard-activated to open a full-screen image viewer. The expanded viewer should keep the current slide title at the top using the same title size, show the whole image without cropping, render the image caption at 130% of the slide-title size, and close from either a small x button or the Escape key.
 - Clicking **Next** changes the text and flies the camera to the next stop.
 - Clicking **Back** returns to the previous stop.
 - Authored tour stops use `cameraMode: "targetCentered"` by default and keep `target` centered with `HeadingPitchRange`.
@@ -1574,6 +1617,12 @@ Build static site:
 
 ```bash
 npm run build
+```
+
+Regenerate the slide 0 layout registration:
+
+```bash
+npm run data:layout
 ```
 
 Build static site for GitHub Pages project deployment:
@@ -1797,23 +1846,25 @@ The coding agent should proceed in this order:
 9. Convert KML placemarks into initial shop and yard location data.
 10. Implement presentation tour data using the KML-derived locations as the foundation.
 11. Add tour data and KML-derived location validation.
-12. Add `npm run data:shipyard` to convert `Philly_Shipyard.gpkg` into generated GeoJSON, style, and manifest assets for the final GIS overlay slide.
-13. Add `npm run data:wip-tour` to convert only the `WIP Tour` LineString from `WIP_Tour.kml` into generated hidden camera-path data.
-14. Implement target-centered camera fly-to behavior with explicit absolute-pose support.
-15. Implement overlay panel.
-16. Implement next/back, keyboard navigation, Home/End, fullscreen, and hide/show overlay controls.
-17. Implement progress dots.
-18. Implement callout manager for labels, highlighted polygons, curved directional arrows, and fallback/debug polylines.
-19. Implement final-slide GIS overlay loading through `Cesium.GeoJsonDataSource`.
-20. Implement WIP Flight sampled camera-path playback.
-21. Implement coordinate capture helper behind a development flag.
-22. Add placeholder photos and graceful missing-image handling.
-23. Add logger with normal and verbose authoring/debug output levels.
-24. Add unit tests, Playwright browser smoke tests, and build/deployment tests that run sequentially.
-25. Add Knip dead-code detection.
-26. Test `npm run dev`, `npm run dev:demo`, `npm run data:shipyard`, `npm run data:wip-tour`, `npm run build`, `npm run build:github`, `npm run preview`, `npm run test:unit`, `npm run test:e2e`, `npm run test:build`, `npm run deadcode`, and `npm run test:all`.
-27. Write a short `README.md` explaining setup, token configuration, scene modes, authoring, testing, data conversion, and deployment.
-28. Write and maintain `AGENTS.md` with important entry points and working guidance for future coding agents.
+12. Add `npm run data:layout` to convert `WIP_Tour.kml` layout reference anchors into `public/data/shipyard-layout-registration.json`.
+13. Add `npm run data:shipyard` to convert `Philly_Shipyard.gpkg` into generated GeoJSON, style, and manifest assets for the final GIS overlay slide.
+14. Add `npm run data:wip-tour` to convert only the `WIP Tour` LineString from `WIP_Tour.kml` into generated hidden camera-path data.
+15. Implement target-centered camera fly-to behavior with explicit absolute-pose support.
+16. Implement overlay panel.
+17. Implement next/back, keyboard navigation, Home/End, fullscreen, and hide/show overlay controls.
+18. Implement progress dots.
+19. Implement callout manager for labels, highlighted polygons, curved directional arrows, and fallback/debug polylines.
+20. Implement slide 0 layout overlay loading through a textured Cesium primitive drawn above the live map or Google 3D Tiles scene, without hiding the underlying scene during the fade.
+21. Implement final-slide GIS overlay loading through `Cesium.GeoJsonDataSource`.
+22. Implement WIP Flight sampled camera-path playback.
+23. Implement coordinate capture helper behind a development flag.
+24. Add placeholder photos and graceful missing-image handling.
+25. Add logger with normal and verbose authoring/debug output levels.
+26. Add unit tests, Playwright browser smoke tests, and build/deployment tests that run sequentially.
+27. Add Knip dead-code detection.
+28. Test `npm run dev`, `npm run dev:demo`, `npm run data:layout`, `npm run data:shipyard`, `npm run data:wip-tour`, `npm run build`, `npm run build:github`, `npm run preview`, `npm run test:unit`, `npm run test:e2e`, `npm run test:build`, `npm run deadcode`, and `npm run test:all`.
+29. Write a short `README.md` explaining setup, token configuration, scene modes, authoring, testing, data conversion, and deployment.
+30. Write and maintain `AGENTS.md` with important entry points and working guidance for future coding agents.
 
 ## 26. README Requirements
 
@@ -1831,6 +1882,7 @@ The agent should produce a `README.md` containing:
 - How to edit tour stops.
 - How target-centered camera mode works and when to use absolute-pose camera mode.
 - How `Philly Tour.kml` / `public/data/philly-tour.kml` seeds the initial shop and yard locations.
+- How slide 0 uses `public/photos/philly-shipyard-layout.png` and `npm run data:layout` to generate `public/data/shipyard-layout-registration.json` from `WIP_Tour.kml` anchor placemarks.
 - How `Philly_Shipyard.gpkg` is converted with `npm run data:shipyard` into `public/data/shipyard-gis/` assets for the final GIS overlay slide.
 - How `WIP_Tour.kml` is converted with `npm run data:wip-tour` into `public/data/wip-tour-path.json` for the hidden WIP Flight camera path.
 - How to add more KML placemarks or convert them into tour stops.
@@ -1858,6 +1910,7 @@ The implementation must include an `AGENTS.md` file at the repository root. This
   - `src/sceneMode.js` for lightweight/demo mode parsing.
   - `src/sceneSetup.js` for Cesium viewer setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, and fallback behavior.
   - `src/tourStops.js` or `public/data/tour-stops.json` for tour data.
+  - `src/shipyardLayoutOverlay.js` for the slide-0 georeferenced PNG layout overlay.
   - `src/shipyardGisLayer.js` for the final-slide GeoJSON overlay.
   - `src/wipFlightController.js` for the hidden WIP Tour sampled camera path.
   - `src/flowChevronLayer.js` for the standalone repeated-chevron overlay on production-flow arrow paths.
@@ -1868,8 +1921,10 @@ The implementation must include an `AGENTS.md` file at the repository root. This
   - `src/coordinateAuthoring.js` for authoring-mode coordinate capture.
   - `src/tourDataValidator.js` for schema and coordinate validation.
   - `src/logger.js` for logging and authoring diagnostics.
+  - `scripts/convertShipyardLayoutKml.mjs` for repeatable `WIP_Tour.kml` anchor-to-layout-registration conversion.
   - `scripts/convertShipyardGpkg.mjs` for repeatable GeoPackage-to-GeoJSON conversion.
   - `scripts/convertWipTourKml.mjs` for repeatable `WIP_Tour.kml` LineString-to-JSON conversion.
+  - `public/data/shipyard-layout-registration.json` for generated slide-0 layout registration.
   - `public/data/shipyard-gis/` for generated final-slide GIS assets.
   - `public/data/wip-tour-path.json` for generated WIP Flight camera-path data.
   - `vite.config.js` for Vite base path and Cesium static asset configuration.
@@ -1880,6 +1935,7 @@ The implementation must include an `AGENTS.md` file at the repository root. This
 - Important commands:
   - `npm run dev`
   - `npm run dev:demo`
+  - `npm run data:layout`
   - `npm run data:shipyard`
   - `npm run data:wip-tour`
   - `npm run build`

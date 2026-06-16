@@ -31,6 +31,7 @@ describe("curved arrow generation", () => {
     const config = buildCurvedArrowPolylineConfig(arrow);
 
     expect(config.material).toBeInstanceOf(Cesium.PolylineArrowMaterialProperty);
+    expect(config.width).toBe(8.75);
     expect(config.arcType).toBe(Cesium.ArcType.NONE);
   });
 });

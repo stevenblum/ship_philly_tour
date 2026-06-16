@@ -1,6 +1,7 @@
 import * as Cesium from "cesium";
 import { normalizeBasePath } from "./basePath.js";
 import { logger } from "./logger.js";
+import { scaleShipGraphVisual } from "./visualScale.js";
 
 const SHIPYARD_GIS_ASSET_DIR = "data/shipyard-gis";
 const SHIPYARD_GIS_SOURCE_FILES = [
@@ -9,10 +10,10 @@ const SHIPYARD_GIS_SOURCE_FILES = [
   { key: "points", fileName: "points.geojson", geometryKind: "points" },
 ];
 
-// GIS_PRESENTATION_SCALE doubles the QGIS-authored line and point sizes only
+// GIS_PRESENTATION_SCALE enlarges the QGIS-authored line and point sizes only
 // inside the Cesium presentation overlay. The generated styles remain faithful
 // to the GeoPackage, while the final slide is easier to read from the audience.
-const GIS_PRESENTATION_SCALE = 2;
+const GIS_PRESENTATION_SCALE = scaleShipGraphVisual(2);
 
 const DEFAULT_STYLE_BY_GEOMETRY = {
   points: {
@@ -160,6 +161,7 @@ function applyPointStyle(entity, style, properties) {
   const pointSizePx =
     (style.pointSizePx ?? DEFAULT_STYLE_BY_GEOMETRY.points.pointSizePx) *
     GIS_PRESENTATION_SCALE;
+  const labelOffsetPaddingPx = scaleShipGraphVisual(6);
 
   entity.billboard = undefined;
   entity.point = {
@@ -173,7 +175,9 @@ function applyPointStyle(entity, style, properties) {
       DEFAULT_STYLE_BY_GEOMETRY.points.outlineColor.css,
     ),
     outlineWidth:
-      style.outlineWidthPx ?? DEFAULT_STYLE_BY_GEOMETRY.points.outlineWidthPx,
+      (style.outlineWidthPx ??
+        DEFAULT_STYLE_BY_GEOMETRY.points.outlineWidthPx) *
+      GIS_PRESENTATION_SCALE,
     heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
   };
@@ -181,13 +185,16 @@ function applyPointStyle(entity, style, properties) {
   if (labelText) {
     entity.label = {
       text: labelText,
-      font: "12px sans-serif",
+      font: `${scaleShipGraphVisual(12)}px sans-serif`,
       fillColor: Cesium.Color.WHITE,
       outlineColor: Cesium.Color.BLACK,
-      outlineWidth: 3,
+      outlineWidth: scaleShipGraphVisual(3),
       style: Cesium.LabelStyle.FILL_AND_OUTLINE,
       verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-      pixelOffset: new Cesium.Cartesian2(0, -(pointSizePx + 6)),
+      pixelOffset: new Cesium.Cartesian2(
+        0,
+        -(pointSizePx + labelOffsetPaddingPx),
+      ),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
     };

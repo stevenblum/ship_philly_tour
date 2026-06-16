@@ -30,6 +30,15 @@ const stops = [
     polylines: [],
   },
 ];
+const photoStop = {
+  ...stops[0],
+  id: "photo",
+  title: "Photo Stop",
+  photos: [
+    { label: "Real Shop", src: "/photos/real-shop.jpg" },
+    { label: "Missing Shop", src: null },
+  ],
+};
 
 // createDom builds the minimum overlay shell TourManager requires so tests can
 // exercise navigation behavior without loading Cesium or WebGL.
@@ -68,12 +77,14 @@ function createManager() {
   const viewer = createViewerStub();
   const calloutManager = { showStopGraphics: vi.fn() };
   const shipyardGisLayer = { show: vi.fn(), hide: vi.fn() };
+  const photoLightbox = { open: vi.fn(), close: vi.fn() };
   const manager = new TourManager(viewer, stops, {
     calloutManager,
     shipyardGisLayer,
+    photoLightbox,
   });
   manager.initialize();
-  return { manager, viewer, calloutManager, shipyardGisLayer };
+  return { manager, viewer, calloutManager, shipyardGisLayer, photoLightbox };
 }
 
 describe("TourManager navigation", () => {
@@ -130,6 +141,158 @@ describe("TourManager navigation", () => {
       target: stops[1].target,
       view: stops[1].view,
     });
+  });
+
+  test("expands real photos and leaves fallback placeholders non-clickable", () => {
+    const viewer = createViewerStub();
+    const calloutManager = { showStopGraphics: vi.fn() };
+    const photoLightbox = { open: vi.fn(), close: vi.fn() };
+    const manager = new TourManager(viewer, [photoStop], {
+      calloutManager,
+      photoLightbox,
+    });
+
+    manager.initialize();
+
+    const expandButton = document.querySelector(".photo-expand-button");
+
+    expect(expandButton).toBeTruthy();
+    expect(expandButton.getAttribute("aria-label")).toBe(
+      "Expand image: Real Shop",
+    );
+    expect(document.querySelectorAll(".photo-expand-button")).toHaveLength(1);
+    expect(document.querySelectorAll(".photo-fallback")).toHaveLength(1);
+
+    expandButton.click();
+
+    expect(photoLightbox.open).toHaveBeenCalledWith({
+      title: "Photo Stop",
+      src: "/photos/real-shop.jpg",
+      alt: "Real Shop",
+      caption: "Real Shop",
+    });
+  });
+
+  test("closes expanded photos when navigating between slides", () => {
+    const viewer = createViewerStub();
+    const calloutManager = { showStopGraphics: vi.fn() };
+    const photoLightbox = { open: vi.fn(), close: vi.fn() };
+    const manager = new TourManager(viewer, [photoStop, stops[1]], {
+      calloutManager,
+      photoLightbox,
+    });
+
+    manager.initialize();
+    photoLightbox.close.mockClear();
+    manager.next();
+
+    expect(photoLightbox.close).toHaveBeenCalledTimes(1);
+  });
+
+  test("can start on slide 1 while Back reaches slide 0 layout overlay", () => {
+    const viewer = createViewerStub();
+    const calloutManager = { showStopGraphics: vi.fn() };
+    const shipyardLayoutOverlay = {
+      show: vi.fn(() => Promise.resolve()),
+      hide: vi.fn(() => Promise.resolve()),
+      flyToOverhead: vi.fn(() => Promise.resolve()),
+    };
+    const slideZero = {
+      id: "shipyard-layout",
+      title: "Shipyard Layout",
+      slideNumber: 0,
+      text: "Layout text",
+      cameraMode: "layoutOverlay",
+      layoutOverlay: {
+        source: "data/shipyard-layout-registration.json",
+        fadeDurationSec: 1.5,
+        durationSec: 3,
+      },
+      stats: [],
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    };
+    const manager = new TourManager(viewer, [slideZero, ...stops], {
+      calloutManager,
+      shipyardLayoutOverlay,
+      initialStopIndex: 1,
+    });
+
+    manager.initialize();
+    expect(manager.currentIndex).toBe(1);
+    expect(document.getElementById("slideTitle").textContent).toBe("First Stop");
+    expect(shipyardLayoutOverlay.hide).toHaveBeenCalledWith({
+      fadeDurationSec: 0,
+    });
+    expect(viewer.camera.viewBoundingSphere).toHaveBeenCalledTimes(1);
+    expect(
+      document
+        .querySelector(".progress-dot")
+        .getAttribute("aria-label"),
+    ).toBe("Go to slide 0: Shipyard Layout");
+
+    manager.previous();
+    expect(manager.currentIndex).toBe(0);
+    expect(document.getElementById("slideTitle").textContent).toBe(
+      "Shipyard Layout",
+    );
+    expect(shipyardLayoutOverlay.show).toHaveBeenCalledWith({
+      source: "data/shipyard-layout-registration.json",
+      fadeDurationSec: 1.5,
+    });
+    expect(shipyardLayoutOverlay.flyToOverhead).toHaveBeenCalledWith({
+      source: "data/shipyard-layout-registration.json",
+      durationSec: 3,
+      instant: undefined,
+    });
+
+    manager.next();
+    expect(manager.currentIndex).toBe(1);
+    expect(document.getElementById("slideTitle").textContent).toBe("First Stop");
+  });
+
+  test("reapplies layout visibility after external scene changes on slide 0", () => {
+    const viewer = createViewerStub();
+    const calloutManager = { showStopGraphics: vi.fn() };
+    const shipyardLayoutOverlay = {
+      show: vi.fn(() => Promise.resolve()),
+      hide: vi.fn(() => Promise.resolve()),
+      flyToOverhead: vi.fn(() => Promise.resolve()),
+      setLayoutAlpha: vi.fn(),
+    };
+    const layoutStop = {
+      id: "shipyard-layout",
+      title: "Shipyard Layout",
+      slideNumber: 0,
+      text: "Layout text",
+      cameraMode: "layoutOverlay",
+      layoutOverlay: { source: "data/shipyard-layout-registration.json" },
+      stats: [],
+      callouts: [],
+      polygons: [],
+      arrows: [],
+      polylines: [],
+    };
+    const manager = new TourManager(viewer, [layoutStop, stops[0]], {
+      calloutManager,
+      shipyardLayoutOverlay,
+    });
+
+    manager.initialize();
+    manager.syncCurrentLayoutOverlay();
+
+    expect(shipyardLayoutOverlay.setLayoutAlpha).toHaveBeenCalledWith(
+      1,
+      "data/shipyard-layout-registration.json",
+    );
+
+    manager.next();
+    shipyardLayoutOverlay.setLayoutAlpha.mockClear();
+    manager.syncCurrentLayoutOverlay();
+
+    expect(shipyardLayoutOverlay.setLayoutAlpha).not.toHaveBeenCalled();
   });
 
   test("toggles the final GIS overlay from stop data", () => {
