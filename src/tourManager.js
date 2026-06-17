@@ -45,9 +45,9 @@ export class TourManager {
     this.surfaceRefreshTimers = [];
   }
 
-  // initialize creates controls before rendering stop 0 so a page load always
-  // lands in a usable presentation state. initialStopIndex lets slide 0 exist
-  // as a Back-only reference slide while the app still opens on slide 1.
+  // initialize creates controls before rendering the configured initial stop so
+  // a page load always lands in a usable presentation state. The current app
+  // starts on slide 0, but tests can still exercise alternate initial indices.
   initialize() {
     this.createProgressDots();
     this.attachEventListeners();

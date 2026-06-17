@@ -15,7 +15,7 @@ The user opens a web page and sees a full-screen Cesium 3D scene. A presentation
 The interaction pattern is:
 
 1. User opens the tour.
-2. The camera starts at a wide shipyard overview.
+2. The camera starts directly over slide 0, `Shipyard Layout`, with the layout PNG visible.
 3. User clicks **Next** or presses the right arrow / spacebar.
 4. The camera smoothly flies to the next stop.
 5. Text, photo cards, labels, callouts, and highlights update.
@@ -44,7 +44,7 @@ Use the following stack:
 - **Vite** for local development and bundling.
 - **Vanilla JavaScript** initially. Do not start with React unless the UI becomes complex.
 - **HTML/CSS overlays** for PowerPoint-style slide panels and photo/stat cards.
-- **Cesium ion** for hosted imagery, terrain, 3D Tiles, and intentionally enabled Google Photorealistic 3D Tiles demo mode.
+- **Cesium ion** for hosted imagery, terrain, 3D Tiles, and the default Google Photorealistic 3D Tiles presentation mode.
 - Optional later: Reveal.js, if a true slide-deck framework becomes useful.
 
 Official references:
@@ -239,7 +239,7 @@ Unit tests must cover:
 - Tour navigation behavior: starts at stop `0`, `next()` advances one stop, `previous()` goes back one stop, navigation does not go below `0`, and navigation does not exceed the final stop unless explicit wraparound behavior is added.
 - `goToStop(id)` or equivalent stop lookup finds the correct stop and fails gracefully for invalid ids.
 - Base-path behavior: local/domain-root base path produces `/cesiumStatic`, GitHub Pages base path produces `/ship_philly_tour/cesiumStatic`, and Vite `base` and `CESIUM_BASE_URL` stay aligned.
-- Scene-mode parsing: default configuration resolves to lightweight mode, `?mode=demo` or equivalent explicit config resolves to photorealistic/demo mode, and the parser can be tested without constructing a Cesium viewer.
+- Scene-mode parsing: default configuration resolves to photorealistic mode, `?photorealistic=false` or equivalent explicit config resolves to lightweight mode, and the parser can be tested without constructing a Cesium viewer.
 - Camera-mode behavior: target-centered stops create a `Cesium.BoundingSphere` and `Cesium.HeadingPitchRange`, default missing `cameraMode` to `targetCentered`, only use `camera.flyTo()` destinations for explicit `absolutePose` stops, and use `pathFlight` only for hidden sampled camera-path slides.
 - Callout and arrow generation functions that convert tour data into Cesium entity configuration objects.
 - Curved-arrow generation produces a sampled path, uses the expected sample count, preserves the first sampled point as the start coordinate, preserves the last sampled point as the target coordinate, uses `Cesium.PolylineArrowMaterialProperty`, and does not rely on plain polylines for arrow behavior.
@@ -332,8 +332,8 @@ Create committed `.env.example` with non-secret placeholder values:
 
 ```text
 VITE_APP_BASE_PATH=/
-VITE_SCENE_MODE=lightweight
-VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false
+VITE_SCENE_MODE=photorealistic
+VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true
 VITE_CESIUM_ION_TOKEN=
 VITE_ENABLE_FLOW_CHEVRONS=true
 VITE_ENABLE_AUTHORING=true
@@ -344,8 +344,8 @@ Create uncommitted `.env.local` for local development secrets:
 
 ```text
 VITE_APP_BASE_PATH=/
-VITE_SCENE_MODE=lightweight
-VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false
+VITE_SCENE_MODE=photorealistic
+VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true
 VITE_CESIUM_ION_TOKEN=replace_with_cesium_ion_token
 VITE_ENABLE_FLOW_CHEVRONS=true
 VITE_ENABLE_AUTHORING=true
@@ -355,8 +355,8 @@ VITE_LOG_LEVEL=info
 Create uncommitted `.env.production.local` for production-build secrets and production defaults:
 
 ```text
-VITE_SCENE_MODE=lightweight
-VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false
+VITE_SCENE_MODE=photorealistic
+VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true
 VITE_CESIUM_ION_TOKEN=replace_with_restricted_production_cesium_ion_token
 VITE_ENABLE_FLOW_CHEVRONS=true
 VITE_ENABLE_AUTHORING=false
@@ -636,7 +636,7 @@ The WIP Flight slide should:
 
 ### 9.4 Shipyard layout overlay slide
 
-Add a slide 0 titled `Shipyard Layout` before `Shipyard Overview`. The app should still open on slide 1, `Shipyard Overview`; pressing Back from slide 1 should show slide 0, and pressing Next should return to slide 1.
+Add a slide 0 titled `Shipyard Layout` before `Shipyard Overview`. The app should open on slide 0 with the layout PNG visible; pressing Next should show slide 1, `Shipyard Overview`.
 
 Use `public/photos/philly-shipyard-layout.png` as a georeferenced flat Cesium surface, not as a side-panel photo. The layout image should be aligned by two KML reference placemarks in `WIP_Tour.kml`:
 
@@ -1258,17 +1258,17 @@ export class CalloutManager {
 }
 ```
 
-## 13. Scene Detail Modes and Photorealistic Tile Conservation
+## 13. Scene Detail Modes and Photorealistic Tile Control
 
-The app must support at least two scene/detail modes. The purpose of this requirement is to conserve Cesium ion and Google Photorealistic 3D Tiles usage during normal development while preserving a high-quality mode for actual demonstrations.
+The app must support at least two scene/detail modes. The default audience-facing app should load Google Photorealistic 3D Tiles for the strongest presentation view, while still allowing presenters, developers, and automated tests to switch to lightweight satellite imagery when quota conservation or debugging requires it.
 
 ### 13.1 Lightweight or standard mode
 
-Lightweight mode is the default mode for fresh developer runs, automated tests, content editing, ordinary rehearsals, and general coding.
+Lightweight mode is the fallback and low-usage mode for automated tests, explicit satellite-imagery sessions, and cases where Google Photorealistic 3D Tiles are disabled or unavailable.
 
 Requirements:
 
-- Default mode for `npm run dev`, `npm run build`, and GitHub Pages builds unless an explicit override is supplied.
+- Must be selectable with `?mode=lightweight`, `?photorealistic=false`, or `VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false`.
 - Must not call `Cesium.createGooglePhotorealistic3DTileset()`.
 - Must still allow the tour, camera moves, labels, callouts, routes, curved arrows, overlays, progress dots, coordinate authoring, and other demo logic to run.
 - Must provide at least standard aerial/satellite imagery, such as Cesium's ArcGIS satellite basemap integration, or equivalent low-cost geographic context so the shipyard is visually recognizable enough for development and rehearsal.
@@ -1277,11 +1277,11 @@ Requirements:
 
 ### 13.2 Photorealistic or demo mode
 
-Photorealistic mode is an explicitly enabled high-detail mode for actual demo presentation, final rehearsal, or polished video capture.
+Photorealistic mode is the default high-detail mode for app startup, GitHub Pages builds, actual demo presentation, final rehearsal, and polished video capture.
 
 Requirements:
 
-- Must load Google Photorealistic 3D Tiles through Cesium ion only after high-detail mode has been intentionally selected.
+- Must load Google Photorealistic 3D Tiles through Cesium ion by default when token permissions and network access allow.
 - Must create Google Photorealistic 3D Tiles with collision enabled so surface-clamped point labels rest on the rendered 3D Tiles surface at their latitude and longitude.
 - Must keep required Cesium and Google credits/attribution visible.
 - Must fall back to lightweight mode if the token is missing, token permissions are insufficient, the network fails, or tile loading fails.
@@ -1299,6 +1299,13 @@ VITE_SCENE_MODE=lightweight
 VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false
 ```
 
+The committed/default production configuration should use:
+
+```text
+VITE_SCENE_MODE=photorealistic
+VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true
+```
+
 Supported URL overrides:
 
 ```text
@@ -1309,7 +1316,7 @@ http://localhost:5173/?photorealistic=true
 http://localhost:5173/?photorealistic=false
 ```
 
-The default must always be low-usage lightweight mode. `?mode=demo`, `?mode=photorealistic`, `?photorealistic=true`, `VITE_SCENE_MODE=demo`, `VITE_SCENE_MODE=photorealistic`, or `VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true` can intentionally enable photorealistic mode. `?photorealistic=false` should explicitly disable photorealistic mode for the current URL.
+The default should be photorealistic mode. `?mode=lightweight`, `?mode=standard`, `?photorealistic=false`, or `VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false` should explicitly disable photorealistic mode. `?mode=demo`, `?mode=photorealistic`, `?photorealistic=true`, `VITE_SCENE_MODE=demo`, `VITE_SCENE_MODE=photorealistic`, or `VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true` should enable photorealistic mode.
 
 Implement mode parsing in an isolated module such as `src/sceneMode.js` so unit tests can verify the default behavior without creating a real Cesium viewer.
 
@@ -1319,7 +1326,7 @@ Example implementation intent:
 const params = new URLSearchParams(window.location.search);
 
 const sceneMode =
-  params.get("mode") ?? import.meta.env.VITE_SCENE_MODE ?? "lightweight";
+  params.get("mode") ?? import.meta.env.VITE_SCENE_MODE ?? "photorealistic";
 
 const usePhotorealistic =
   sceneMode === "demo" ||
@@ -1346,7 +1353,7 @@ The app must log the active scene mode so a developer or presenter can confirm w
 Example status:
 
 ```text
-Scene mode: lightweight | Google Photorealistic 3D Tiles: disabled
+Scene mode: photorealistic | Google Photorealistic 3D Tiles: enabled
 ```
 
 The default presentation UI should not show internal Vite, Cesium, build, scene-mode, or slide-count status to the audience. If a future debug overlay is added, it should be gated behind authoring/debug configuration and disabled for presentation.
@@ -1357,8 +1364,8 @@ The app must include a small upper-right checkbox labeled for Google 3D or equiv
 
 Requirements:
 
-- The checkbox must start unchecked in default lightweight mode.
-- The checkbox must start checked if the app is intentionally opened in photorealistic/demo mode and the tiles load successfully.
+- The checkbox must start checked when the default photorealistic scene loads successfully.
+- The checkbox must start unchecked when the app is explicitly opened in lightweight mode or when photorealistic loading fails.
 - Checking the box must enable Google Photorealistic 3D Tiles without a code edit.
 - Unchecking the box must remove or disable Google Photorealistic 3D Tiles and restore the lightweight scene context.
 - The control must not replace URL/environment scene-mode configuration; it is a runtime override for presenters and developers.
@@ -1369,13 +1376,13 @@ Requirements:
 
 ### 13.6 Intended workflow
 
-Use lightweight mode for normal development, automated tests, content edits, and most rehearsals.
+Use photorealistic mode for the normal presentation experience.
 
-Use high-detail photorealistic mode only for actual demo presentation, final rehearsal, or polished video capture.
+Use lightweight mode for automated tests, quota-conserving development sessions, or manual satellite-imagery comparison.
 
 Avoid repeated page refreshes in high-detail mode. Keep the viewer session open during a live demo when possible. Restrict the Cesium ion token to `localhost` and the deployment URL.
 
-Implement photorealistic scene setup as part of the first working app, but keep it intentionally gated so it is never loaded by default.
+Implement photorealistic scene setup as part of the first working app and load it by default, with clear runtime and URL controls for disabling it.
 
 ## 14. Authoring Workflow for Tour Stops
 
@@ -1472,9 +1479,9 @@ The first working version should include:
 1. Vite project running locally with `npm run dev`.
 2. Cesium viewer fills the browser window.
 3. Cesium ion token loaded from uncommitted `.env.local` during development.
-4. Lightweight scene mode runs by default and does not call `Cesium.createGooglePhotorealistic3DTileset()`.
-5. Lightweight scene mode shows standard aerial/satellite imagery or equivalent low-cost geographic context.
-6. Google Photorealistic 3D Tiles load only when demo/photorealistic mode is explicitly selected and token permissions plus network access allow.
+4. Photorealistic scene mode runs by default and calls `Cesium.createGooglePhotorealistic3DTileset()` when token permissions plus network access allow.
+5. Lightweight scene mode shows standard aerial/satellite imagery or equivalent low-cost geographic context when selected or used as fallback.
+6. Google Photorealistic 3D Tiles can be disabled with the runtime checkbox, URL override, or environment configuration.
 7. Lightweight fallback works when photorealistic tiles are disabled, unavailable, or fail to load.
 8. KML-derived shop and yard placemarks from `Philly Tour.kml` / `public/data/philly-tour.kml` are used as the foundation for the initial tour data.
 9. Slide 0 reference overlay plus thirteen audience-facing tour stops:
@@ -1520,7 +1527,7 @@ The first working version should include:
 35. Knip dead-code detection configured through `knip.json` and wired to `npm run deadcode`.
 36. Standard Cesium compass/navigation widget initialized through `cesium-navigation-es6` with the plugin defaults for compass, zoom controls, distance legend, and compass outer ring.
 37. Upper-right runtime checkbox that enables/disables Google Photorealistic 3D Tiles without changing code.
-38. Slide 0 Shipyard Layout overlay generated from `WIP_Tour.kml` anchors through `npm run data:layout`, rendered as a georeferenced PNG surface, and available by pressing Back from the default overview slide.
+38. Slide 0 Shipyard Layout overlay generated from `WIP_Tour.kml` anchors through `npm run data:layout`, rendered as a georeferenced PNG surface, and used as the default startup slide.
 39. Final MES Network slide generated from `Philly_Shipyard.gpkg` through `npm run data:shipyard` and loaded as a static GeoJSON/style overlay.
 40. Second-to-last WIP Flight slide generated from the `WIP Tour` LineString in `WIP_Tour.kml` through `npm run data:wip-tour`.
 
@@ -1533,11 +1540,11 @@ The implementation is acceptable when:
 - Missing optional assets show an intentional fallback state and log a useful warning.
 - The Cesium scene loads.
 - The Cesium viewer displays the standard `cesium-navigation-es6` compass/navigation widget as a visual north and rotation reference.
-- A fresh developer run uses low-usage lightweight mode by default.
+- A fresh app run loads Google Photorealistic 3D Tiles by default when token permissions and network access allow.
 - Lightweight mode shows standard aerial/satellite imagery or equivalent low-cost geographic context.
-- Google Photorealistic 3D Tiles are not loaded unless explicitly enabled.
+- Google Photorealistic 3D Tiles are not loaded when lightweight mode is explicitly selected.
 - `?mode=demo`, `?mode=photorealistic`, `?photorealistic=true`, or equivalent environment configuration enables high-detail mode.
-- The upper-right Google 3D checkbox is visible above the compass/zoom tools, starts unchecked in lightweight mode, and can enable high-detail mode at runtime.
+- The upper-right Google 3D checkbox is visible above the compass/zoom tools, starts checked after successful default Google 3D loading, and can disable or re-enable high-detail mode at runtime.
 - The upper-right Copy Camera button is visible below the Google 3D checkbox, copies the current camera view to the clipboard, and does not display camera JSON in the UI.
 - Unchecking the Google 3D checkbox returns the app to lightweight scene context without breaking the active tour state.
 - If runtime photorealistic enabling fails, the Google 3D checkbox rolls back to unchecked and the app remains usable.
@@ -1560,8 +1567,8 @@ The implementation is acceptable when:
 - The Cutting Shop stop activates the curated Cutting Area point label.
 - Shop-location point labels anchor to the map surface in lightweight mode and clamp to the rendered 3D Tiles surface in photorealistic mode when tiles load.
 - Photorealistic 3D Tiles are created with collision enabled so Cesium height references can resolve surface-clamped labels against the tile geometry.
-- The app opens on slide 1, `Shipyard Overview`, not slide 0.
-- Pressing Back from slide 1 shows slide 0, `Shipyard Layout`, and pressing Next returns to `Shipyard Overview`.
+- The app opens on slide 0, `Shipyard Layout`, with the layout PNG visible.
+- Pressing Next from slide 0 shows slide 1, `Shipyard Overview`; pressing Back from slide 1 returns to slide 0.
 - Slide 0 renders `public/photos/philly-shipyard-layout.png` as a georeferenced flat image surface using `public/data/shipyard-layout-registration.json`.
 - Slide 0 fades only the layout PNG primitive while keeping map/satellite imagery visible and loaded underneath.
 - Slide 0 keeps any already-loaded Google Photorealistic 3D Tiles visible behind the layout PNG and does not toggle tileset visibility.
@@ -1839,8 +1846,8 @@ The coding agent should proceed in this order:
 2. Add Cesium static asset config.
 3. Add `.env.local` and `.env.production.local` token support with committed `.env.example`.
 4. Implement full-screen Cesium viewer.
-5. Implement scene-mode parsing with lightweight mode as the default and URL/env overrides for demo mode.
-6. Implement Google Photorealistic 3D Tiles setup only inside explicitly enabled demo mode.
+5. Implement scene-mode parsing with photorealistic mode as the default and URL/env overrides for lightweight mode.
+6. Implement Google Photorealistic 3D Tiles setup on startup when default photorealistic mode is active.
 7. Implement lightweight fallback for disabled or failed photorealistic tile loading.
 8. Normalize or copy the provided KML source into `public/data/philly-tour.kml`.
 9. Convert KML placemarks into initial shop and yard location data.
@@ -1875,8 +1882,8 @@ The agent should produce a `README.md` containing:
 - Installation commands.
 - How to create `.env.local` and `.env.production.local`.
 - How to set `VITE_APP_BASE_PATH` for local/domain-root builds and GitHub Pages project-site builds.
-- How lightweight mode and photorealistic demo mode work.
-- How to enable demo mode with `?mode=demo`, `?photorealistic=true`, or `npm run dev:demo`.
+- How default photorealistic mode and optional lightweight mode work.
+- How to disable Google 3D with `?mode=lightweight`, `?photorealistic=false`, or `VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false`.
 - Guidance to avoid repeated refreshes in photorealistic mode and restrict the Cesium ion token to localhost and the deployment URL.
 - How to run locally.
 - How to edit tour stops.
@@ -1907,8 +1914,8 @@ The implementation must include an `AGENTS.md` file at the repository root. This
   - `index.html` for the HTML shell.
   - `src/main.js` for app startup.
   - `src/cameraViewClipboard.js` for the upper-right camera-copy button and clipboard payload generation.
-  - `src/sceneMode.js` for lightweight/demo mode parsing.
-  - `src/sceneSetup.js` for Cesium viewer setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, and fallback behavior.
+  - `src/sceneMode.js` for photorealistic/lightweight mode parsing.
+  - `src/sceneSetup.js` for Cesium viewer setup, default Google Photorealistic 3D Tiles loading, lightweight satellite mode, and fallback behavior.
   - `src/tourStops.js` or `public/data/tour-stops.json` for tour data.
   - `src/shipyardLayoutOverlay.js` for the slide-0 georeferenced PNG layout overlay.
   - `src/shipyardGisLayer.js` for the final-slide GeoJSON overlay.

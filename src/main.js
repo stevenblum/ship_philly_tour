@@ -83,7 +83,7 @@ async function bootstrap() {
     shipyardGisLayer,
     shipyardLayoutOverlay,
     wipFlightController,
-    initialStopIndex: 1,
+    initialStopIndex: 0,
   });
   tourManager.initialize();
   initializeCameraViewCopyButton(viewer, {

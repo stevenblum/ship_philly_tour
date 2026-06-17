@@ -1,6 +1,6 @@
 # Philadelphia Shipyard Cesium Tour
 
-Browser-based CesiumJS tour of the Philadelphia Shipyard. The app starts in a low-usage lightweight Cesium scene with standard aerial/satellite imagery by default, supports an intentional Google Photorealistic 3D Tiles demo mode, and uses KML-derived shop and yard placemarks as the tour foundation.
+Browser-based CesiumJS tour of the Philadelphia Shipyard. The app starts with Google Photorealistic 3D Tiles by default, includes an upper-right Google 3D checkbox for switching back to lightweight satellite imagery, and uses KML-derived shop and yard placemarks as the tour foundation.
 
 ## Setup
 
@@ -15,8 +15,8 @@ Create `.env.local` for local development:
 
 ```text
 VITE_APP_BASE_PATH=/
-VITE_SCENE_MODE=lightweight
-VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false
+VITE_SCENE_MODE=photorealistic
+VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true
 VITE_CESIUM_ION_TOKEN=replace_with_cesium_ion_token
 VITE_ENABLE_FLOW_CHEVRONS=true
 VITE_ENABLE_AUTHORING=true
@@ -26,8 +26,8 @@ VITE_LOG_LEVEL=info
 Create `.env.production.local` for production builds with a restricted token:
 
 ```text
-VITE_SCENE_MODE=lightweight
-VITE_ENABLE_GOOGLE_PHOTOREALISTIC=false
+VITE_SCENE_MODE=photorealistic
+VITE_ENABLE_GOOGLE_PHOTOREALISTIC=true
 VITE_CESIUM_ION_TOKEN=replace_with_restricted_production_cesium_ion_token
 VITE_ENABLE_FLOW_CHEVRONS=true
 VITE_ENABLE_AUTHORING=false
@@ -87,24 +87,24 @@ https://stevenblum.github.io/ship_philly_tour/
 
 ## Scene Modes
 
-Use lightweight mode for normal development, tests, content editing, and most rehearsals. This mode should show standard aerial/satellite imagery, currently through Cesium's ArcGIS satellite basemap integration, but it should not load Google Photorealistic 3D Tiles:
+The default app view loads Google Photorealistic 3D Tiles when the Cesium ion token can access asset `2275207`:
 
 ```text
 http://localhost:5173/
 ```
 
-Use photorealistic demo mode only for actual presentations, final rehearsal, or polished video capture:
+Use lightweight mode when you want standard aerial/satellite imagery without Google Photorealistic 3D Tiles:
 
 ```text
-http://localhost:5173/?mode=demo
-http://localhost:5173/?photorealistic=true
+http://localhost:5173/?mode=lightweight
+http://localhost:5173/?photorealistic=false
 ```
 
-`npm run dev` starts in lightweight mode by default. `npm run dev:demo` starts a demo-mode dev server, but the URL override is usually clearer for one-off checks.
+`npm run dev` starts in photorealistic mode by default. Automated Playwright tests force lightweight mode so test runs do not consume Google Photorealistic 3D Tiles quota.
 
 Avoid repeated page refreshes in photorealistic mode. Keep the viewer session open during live demos when possible, and restrict the Cesium ion token to `localhost` plus the GitHub Pages deployment URL.
 
-Scene mode is logged for developer confirmation, but the default presentation UI does not show internal Vite/Cesium status badges to the audience. The upper-right **Google 3D** checkbox can enable or disable Google Photorealistic 3D Tiles at runtime; leave it unchecked for normal development and rehearsals to conserve tile usage.
+Scene mode is logged for developer confirmation, but the default presentation UI does not show internal Vite/Cesium status badges to the audience. The upper-right **Google 3D** checkbox starts checked when Google 3D loads successfully; uncheck it to remove Google Photorealistic 3D Tiles and return to lightweight satellite imagery.
 
 ## Navigation Widget
 
@@ -120,7 +120,7 @@ Slide 0 uses `public/photos/philly-shipyard-layout.png` as a georeferenced, flat
 npm run data:layout
 ```
 
-That command regenerates `public/data/shipyard-layout-registration.json`. The app opens on slide 1, `Shipyard Overview`; pressing Back shows slide 0, `Shipyard Layout`. The transition uses a 1.5 second fade: the layout image fades in as an opaque overlay on top of the live satellite imagery or Google Photorealistic 3D Tiles scene. The underlying imagery and tiles stay visible and loaded, so returning to the overview does not reveal a star-only background or require a cold reload.
+That command regenerates `public/data/shipyard-layout-registration.json`. The app opens on slide 0, `Shipyard Layout`; pressing Next shows slide 1, `Shipyard Overview`. The transition uses a 1.5 second fade: the layout image fades in as an opaque overlay on top of the live satellite imagery or Google Photorealistic 3D Tiles scene. The underlying imagery and tiles stay visible and loaded, so returning to the overview does not reveal a star-only background or require a cold reload.
 
 The full manufacturing-equipment, storage-area, shop-boundary, process-edge, and roads overlay uses `Philly_Shipyard.gpkg` as the canonical GIS source. Run this after updating the GeoPackage:
 
@@ -148,7 +148,7 @@ The blue production-flow arrows also stay visible throughout the tour. They reso
 
 Repeated chevrons are rendered by `src/flowChevronLayer.js` as a standalone billboard overlay on those same sampled arrow paths. They are spaced from sampled Cesium path length at roughly one chevron every 6 yards, so longer arrows automatically get more chevrons and shorter arrows get fewer. They are enabled by default for clearer flow direction, active routes turn green with a subtle wave effect, and the layer can be disabled with `VITE_ENABLE_FLOW_CHEVRONS=false` or `?chevrons=false`.
 
-The app opens on slide 1. The full sequence is: slide 0 Shipyard Layout, then Shipyard Overview, Steel Storage Yard, Cutting Shop, Panel Production Shops, Section Assembly Shop, Outfitting Shop, Block Assembly Shop, Painting Shop, Grand Block Assembly Area, Building Dock, Outfitting Dock, WIP Flight, and MES Network. The Panel Production Shops stop shows four images: Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop. Web Shop remains part of the map labels and production flow, but it does not show an image placeholder. Real tour images can be clicked to open a full-screen viewer with the slide title, enlarged image caption, close button, and Escape-key dismissal. The WIP Flight stop hides ordinary production-flow graphics and runs the hidden camera path; the final MES Network stop hides the ordinary production-flow arrows and shows the generated GIS overlay.
+The app opens on slide 0. The full sequence is: Shipyard Layout, then Shipyard Overview, Steel Storage Yard, Cutting Shop, Panel Production Shops, Section Assembly Shop, Outfitting Shop, Block Assembly Shop, Painting Shop, Grand Block Assembly Area, Building Dock, Outfitting Dock, WIP Flight, and MES Network. The Panel Production Shops stop shows four images: Large Panel Shop, Double Bottom Shop, Bulkhead Shop, and Curved Panel Shop. Web Shop remains part of the map labels and production flow, but it does not show an image placeholder. Real tour images can be clicked to open a full-screen viewer with the slide title, enlarged image caption, close button, and Escape-key dismissal. The WIP Flight stop hides ordinary production-flow graphics and runs the hidden camera path; the final MES Network stop hides the ordinary production-flow arrows and shows the generated GIS overlay.
 
 To add locations, add placemarks to the KML, then add corresponding structured records and tests. Preserve source placemark ids and names; add separate display labels when a source typo needs a curated label.
 

@@ -1,6 +1,6 @@
-// sceneMode centralizes high-detail scene selection so development, testing,
-// and presentations can conserve Google Photorealistic 3D Tiles quota by
-// default while still allowing an intentional demo override.
+// sceneMode centralizes high-detail scene selection so the presentation loads
+// Google Photorealistic 3D Tiles by default while still allowing URL/env
+// overrides to fall back to lightweight satellite imagery.
 const PHOTOREALISTIC_MODES = new Set(["demo", "photorealistic"]);
 const LIGHTWEIGHT_MODES = new Set(["lightweight", "standard"]);
 
@@ -26,7 +26,7 @@ function normalizeSearch(search) {
 }
 
 // normalizeSceneMode accepts the documented names and degrades unknown values
-// to lightweight so a typo cannot accidentally consume photorealistic quota.
+// to lightweight so a typo does not accidentally request high-detail tiles.
 function normalizeSceneMode(value) {
   const normalized = String(value ?? "")
     .trim()
@@ -62,9 +62,9 @@ function buildSceneModeResult(sceneMode, usePhotorealistic, source) {
   };
 }
 
-// resolveSceneMode implements the quota-conservation policy. URL overrides have
-// priority because presenters need a no-code way to switch mode for demos, while
-// environment variables provide repeatable defaults for dev and build scripts.
+// resolveSceneMode implements the scene-detail policy. URL overrides have
+// priority because presenters need a no-code way to switch mode, while
+// environment variables provide repeatable defaults for dev, tests, and builds.
 export function resolveSceneMode(options = {}) {
   const env = options.env ?? readRuntimeEnv();
   const browserSearch = typeof window !== "undefined" ? window.location.search : "";
@@ -88,21 +88,28 @@ export function resolveSceneMode(options = {}) {
     return buildSceneModeResult(urlMode, PHOTOREALISTIC_MODES.has(urlMode), "url:mode");
   }
 
-  // A true env flag intentionally enables demo visuals for a whole dev server
-  // session; false stays neutral so VITE_SCENE_MODE can still be used alone.
+  // The explicit env boolean is the strongest repeatable server/build default.
+  // Tests and low-usage sessions use false to start in satellite imagery.
   const envPhotorealistic = readBooleanFlag(env.VITE_ENABLE_GOOGLE_PHOTOREALISTIC);
   if (envPhotorealistic === true) {
     return buildSceneModeResult("demo", true, "env:VITE_ENABLE_GOOGLE_PHOTOREALISTIC");
   }
+  if (envPhotorealistic === false) {
+    return buildSceneModeResult(
+      "lightweight",
+      false,
+      "env:VITE_ENABLE_GOOGLE_PHOTOREALISTIC",
+    );
+  }
 
-  // VITE_SCENE_MODE is the preferred descriptive default. Missing, invalid, or
-  // explicit lightweight values keep the app in low-usage mode.
+  // VITE_SCENE_MODE is the preferred descriptive default when the boolean flag
+  // is not present. Missing values now fall through to photorealistic mode.
   const envMode = normalizeSceneMode(env.VITE_SCENE_MODE);
   if (envMode) {
     return buildSceneModeResult(envMode, PHOTOREALISTIC_MODES.has(envMode), "env:VITE_SCENE_MODE");
   }
 
-  return buildSceneModeResult("lightweight", false, "default");
+  return buildSceneModeResult("photorealistic", true, "default");
 }
 
 // formatSceneModeStatus produces the human-readable status used in the visible

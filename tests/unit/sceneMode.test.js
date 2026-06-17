@@ -1,20 +1,20 @@
 import { describe, expect, test } from "vitest";
 import { formatSceneModeStatus, resolveSceneMode } from "../../src/sceneMode.js";
 
-// resolveSceneMode tests protect the quota-conservation requirement without
+// resolveSceneMode tests protect the scene-detail startup contract without
 // loading Cesium or creating a WebGL context.
 describe("resolveSceneMode", () => {
-  test("defaults to lightweight mode without photorealistic tiles", () => {
+  test("defaults to photorealistic mode", () => {
     const result = resolveSceneMode({ env: {}, search: "" });
 
     expect(result).toEqual({
-      sceneMode: "lightweight",
-      usePhotorealistic: false,
+      sceneMode: "photorealistic",
+      usePhotorealistic: true,
       source: "default",
     });
   });
 
-  test("keeps documented env defaults in lightweight mode", () => {
+  test("lets documented env config force lightweight mode", () => {
     const result = resolveSceneMode({
       env: {
         VITE_SCENE_MODE: "lightweight",
@@ -25,6 +25,7 @@ describe("resolveSceneMode", () => {
 
     expect(result.sceneMode).toBe("lightweight");
     expect(result.usePhotorealistic).toBe(false);
+    expect(result.source).toBe("env:VITE_ENABLE_GOOGLE_PHOTOREALISTIC");
   });
 
   test("enables photorealistic mode through the presenter URL mode", () => {

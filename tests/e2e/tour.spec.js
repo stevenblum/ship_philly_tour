@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 // The smoke test checks the click-through presentation contract and lets Cesium
-// handle rendering without asserting fragile WebGL pixels.
+// handle rendering without asserting fragile WebGL pixels. Playwright starts
+// the dev server in explicit lightweight mode so automated smoke tests do not
+// consume Google Photorealistic 3D Tiles quota.
 test("tour loads and advances", async ({ page }) => {
   test.setTimeout(45_000);
   const consoleErrors = [];
@@ -58,8 +60,11 @@ test("tour loads and advances", async ({ page }) => {
   );
   await expect(page.getByRole("button", { name: /next/i })).toBeVisible();
 
-  const firstTitle = await page.locator("#slideTitle").textContent();
+  await expect(page.locator("#slideTitle")).toHaveText("Shipyard Layout");
+
+  await page.getByRole("button", { name: /next/i }).click();
   await expect(page.locator("#slideTitle")).toHaveText("Shipyard Overview");
+  const overviewTitle = await page.locator("#slideTitle").textContent();
 
   await page.getByRole("button", { name: /back/i }).click();
   await expect(page.locator("#slideTitle")).toHaveText("Shipyard Layout");
@@ -68,10 +73,10 @@ test("tour loads and advances", async ({ page }) => {
   await expect(page.locator("#slideTitle")).toHaveText("Shipyard Overview");
 
   await page.getByRole("button", { name: /next/i }).click();
-  await expect(page.locator("#slideTitle")).not.toHaveText(firstTitle ?? "");
+  await expect(page.locator("#slideTitle")).not.toHaveText(overviewTitle ?? "");
 
   await page.keyboard.press("ArrowLeft");
-  await expect(page.locator("#slideTitle")).toHaveText(firstTitle ?? "");
+  await expect(page.locator("#slideTitle")).toHaveText(overviewTitle ?? "");
 
   await expect(page.locator(".progress-dot")).toHaveCount(14);
 

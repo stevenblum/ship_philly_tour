@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Build and maintain a CesiumJS click-through tour of the Philadelphia Shipyard using KML-derived shipyard locations, lightweight default scene mode, intentional photorealistic demo mode, and presentation-style overlays.
+Build and maintain a CesiumJS click-through tour of the Philadelphia Shipyard using KML-derived shipyard locations, default Google Photorealistic 3D Tiles, optional lightweight satellite mode, and presentation-style overlays.
 
 ## App Root
 
@@ -19,8 +19,8 @@ Do not create a nested child app such as `philly-shipyard-tour/`.
 - `index.html`: HTML shell and overlay root elements.
 - `src/main.js`: app startup, validation, scene setup, tour manager initialization.
 - `src/cameraViewClipboard.js`: upper-right camera-copy authoring button and clipboard payload generation.
-- `src/sceneMode.js`: lightweight/demo mode parsing for env variables and URL overrides.
-- `src/sceneSetup.js`: Cesium viewer creation, standard `cesium-navigation-es6` compass/navigation widget setup, lightweight default scene, Google Photorealistic 3D Tiles demo loading, default-globe fallback.
+- `src/sceneMode.js`: photorealistic/lightweight mode parsing for env variables and URL overrides.
+- `src/sceneSetup.js`: Cesium viewer creation, standard `cesium-navigation-es6` compass/navigation widget setup, default Google Photorealistic 3D Tiles loading, lightweight satellite fallback.
 - `src/photorealisticToggle.js`: upper-right presentation checkbox for enabling/disabling Google Photorealistic 3D Tiles at runtime.
 - `src/photoLightbox.js`: reusable full-screen image expansion overlay for tour photos.
 - `src/publicAssetUrl.js`: base-path-aware public asset URL helper for photos, layout images, and GitHub Pages project-site deployment.

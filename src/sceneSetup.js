@@ -149,9 +149,8 @@ export function classifyPhotorealisticTilesError(error) {
   };
 }
 
-// createLightweightViewer provides the default low-usage scene. It avoids
-// Google Photorealistic 3D Tiles while preserving camera, entity, callout,
-// overlay, and authoring behavior for normal coding and rehearsals.
+// createLightweightViewer provides the satellite imagery scene used as the base
+// viewer and as the fallback when Google 3D is disabled or unavailable.
 function createLightweightViewer(containerId) {
   logger.info("Using lightweight Cesium scene.");
   return createViewer(
@@ -193,9 +192,9 @@ function setLightweightGlobeVisible(viewer, visible) {
   }
 }
 
-// addGooglePhotorealisticTiles is called only after startup config or the
-// runtime checkbox explicitly selects high-detail mode, which prevents
-// accidental quota usage during development and automated tests.
+// addGooglePhotorealisticTiles is called after startup config or the runtime
+// checkbox selects high-detail mode. Automated tests explicitly configure
+// lightweight mode so they do not consume Google Photorealistic 3D Tiles quota.
 async function addGooglePhotorealisticTiles(viewer, options = {}) {
   try {
     const { apiOptions, tilesetOptions } =
@@ -299,9 +298,9 @@ export async function setGooglePhotorealisticTilesEnabled(
   return sceneStatus;
 }
 
-// setupScene creates a lightweight scene by default and only loads Google
-// Photorealistic 3D Tiles when URL or environment configuration explicitly asks
-// for high-detail demo mode.
+// setupScene creates the satellite base scene first, then loads Google
+// Photorealistic 3D Tiles by default unless URL or environment configuration
+// explicitly requests lightweight mode.
 export async function setupScene(containerId) {
   const modeConfig = resolveSceneMode();
   const token = readCesiumIonToken();
